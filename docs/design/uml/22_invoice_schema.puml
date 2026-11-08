@@ -1,0 +1,95 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+skinparam ranksep 85
+
+top to bottom direction
+class sales_invoice <<table>> {
+  +id: UUID [PK]
+  +firm_id: UUID [FK]
+  +customer_id: UUID? [FK]
+  +invoice_date: ISO_DATE
+  +fy_start: INTEGER
+  +invoice_no: INTEGER?
+  +state: TEXT
+  +row_version: INTEGER
+  +current_snapshot_id: UUID? [FK]
+}
+class draft_line <<table>> {
+  +id: UUID [PK]
+  +invoice_id: UUID [FK]
+  +quantity_decimal: TEXT
+  +unit_price_decimal: TEXT
+  +line_input_json: TEXT
+}
+class invoice_snapshot <<table>> {
+  +id: UUID [PK]
+  +invoice_id: UUID [FK]
+  +revision: INTEGER
+  +financial_facts_json: TEXT
+  +grand_total_paise: INTEGER
+  +content_hash: TEXT
+}
+class sequence_counter <<table>> {
+  +firm_id: UUID [PK part]
+  +fy_start: INTEGER [PK part]
+  +document_kind: TEXT [PK part]
+  +next_value: INTEGER
+}
+class issuance_receipt <<table>> {
+  +request_id: UUID [PK]
+  +invoice_id: UUID [FK, UNIQUE]
+  +snapshot_id: UUID [FK]
+  +request_hash: TEXT
+  +result_json: TEXT
+}
+class render_binding <<table>> {
+  +id: UUID [PK]
+  +invoice_snapshot_id: UUID [FK]
+  +template_version_id: UUID [FK]
+  +branding_snapshot_id: UUID [FK]
+  +fingerprint: TEXT [UNIQUE]
+}
+sales_invoice "1" *-- "0..*" draft_line
+sales_invoice "1" -- "0..*" invoice_snapshot
+sales_invoice "1" -- "0..1" issuance_receipt
+invoice_snapshot "1" -- "0..*" render_binding
+sequence_counter ..> sales_invoice : allocate within transaction
+@enduml

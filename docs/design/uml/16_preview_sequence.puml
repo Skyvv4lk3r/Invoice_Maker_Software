@@ -1,0 +1,63 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+autonumber
+participant "PreviewViewModel" as UI
+participant "Public application services" as API
+database "Draft / template / job stores" as DB
+participant "Document worker" as Worker
+participant "Artifact store" as Store
+UI -> API : preview(draftId, revision, candidateHash,\nformat)
+API -> DB : Capture immutable draft and template inputs
+DB --> API : Captured values or revision conflict
+API -> DB : Save PreviewBinding and pending job
+API --> UI : JobAcceptedDTO
+Worker -> DB : Claim job; load captured inputs
+Worker -> Worker : Map to document model; apply DRAFT\nwatermark
+Worker -> Worker : Render using the format port
+Worker -> Store : Publish preview artifact atomically
+Store --> Worker : Artifact ID
+Worker -> DB : Register artifact and completed job
+UI -> API : IJobQueries.status(jobId)
+API -> DB : Read job result
+API --> UI : JobStatusDTO with artifact ID
+UI -> UI : Display captured revision; mark stale if\nedited
+note over UI,DB : Preview never allocates an invoice number or changes issue state
+@enduml

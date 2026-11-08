@@ -1,0 +1,64 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+hide empty description
+state "Draft" as Draft
+state "Issued" as Issued
+state "Cancelled" as Cancelled
+state "Deleted draft\n(tombstone + audit)" as Deleted
+[*] --> Draft : Create
+Draft : edit / autosave / preview
+Draft --> Issued : Validate + allocate number\n+ snapshot + commit
+Draft --> Deleted : Confirm deletion\nretain audit event
+Issued : clericalCorrection [policy allows] / append revision + audit
+Issued : recordPayment / append ledger entry
+Issued : issueAdjustment / link credit or debit note
+Issued --> Cancelled : CancellationPolicy permits\nreason + audit
+note right of Issued
+Number and financial year are stable.
+Financial corrections use adjustment notes.
+Document generation has its own state.
+end note
+note bottom of Cancelled
+Preserve originals and revision history.
+Never return its number to the sequence.
+Check payments and refund handling.
+end note
+@enduml

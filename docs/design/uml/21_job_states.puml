@@ -1,0 +1,61 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+hide empty description
+state "Pending" as Pending
+state "Running\nlease + heartbeat" as Running
+state "Succeeded\ndurable artifact + metadata" as Succeeded
+state "Failed\nerror + retry context" as Failed
+state "Cancelled\nexport job only" as Cancelled
+[*] -down-> Pending : Commit job with\nowning operation
+Pending -down-> Running : Claim atomically
+Running -down-> Succeeded : Every required\noutput verified
+Running -right-> Failed : Rendering /\nstorage error
+Running -up-> Pending : Lease expired after crash\nand safe to retry
+Failed -up-> Pending : Retry same job /\nidempotency key
+Pending --> Cancelled : Owner cancels export
+Running --> Cancelled : Cooperative export cancellation\nclean temporary files
+Succeeded : revealFiles / record handoff only
+note bottom of Succeeded
+No SENT or DELIVERED state in v1.
+External email / WhatsApp delivery
+is outside application observation.
+end note
+@enduml

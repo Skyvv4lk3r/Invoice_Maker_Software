@@ -1,0 +1,74 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+top to bottom direction
+actor Owner
+node "Owner's Windows computer" as PC {
+  node "Invoice Desktop process" as App {
+    artifact "Packaged Python + PySide6\nQt frontend | Backend contracts/core" as Exe
+    component "Background workers\nrender / export / backup" as Jobs
+    component "SQLAlchemy / SQLite and file adapters" as Adapt
+    Exe --> Jobs
+    Exe --> Adapt
+    Jobs --> Adapt
+  }
+  folder "Local application data\nWindows permissions + device encryption" as Data {
+    database "Active SQLite dataset" as DB
+    artifact "Immutable documents, assets\ntemplate versions, fonts and audit" as Docs
+    artifact "Local encrypted backups\nrestore journal and generations" as LocalBackup
+  }
+  node "Windows applications" as OS {
+    artifact "File Explorer / printer" as Explorer
+    artifact "Email client / WhatsApp" as Messaging
+  }
+  Adapt --> DB
+  Adapt --> Docs
+  Adapt --> LocalBackup
+  Exe --> Explorer : preview / print / reveal files
+  Owner --> Messaging : attach and send manually
+}
+node "Configured off-device destination" as Remote {
+  artifact "Encrypted backup copy\ncloud storage or external drive" as Copy
+}
+actor "Customer / accountant" as Recipient
+Owner --> Exe : desktop UI
+LocalBackup ..> Copy : completed backup archives only
+Messaging --> Recipient : external delivery
+@enduml

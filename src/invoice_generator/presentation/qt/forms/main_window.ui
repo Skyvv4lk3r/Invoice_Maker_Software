@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DraftWorkspace</class>
+ <widget class="QWidget" name="DraftWorkspace">
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="spacing"><number>14</number></property>
+   <property name="leftMargin"><number>20</number></property>
+   <property name="topMargin"><number>20</number></property>
+   <property name="rightMargin"><number>20</number></property>
+   <property name="bottomMargin"><number>20</number></property>
+   <item><widget class="QLabel" name="titleLabel"><property name="text"><string>Invoice Generator</string></property><property name="font"><font><pointsize>22</pointsize><bold>true</bold></font></property></widget></item>
+   <item><widget class="QLabel" name="buildLabel"><property name="text"><string>Development build · Draft invoices only · PDF copies are marked DRAFT</string></property></widget></item>
+   <item><layout class="QHBoxLayout" name="workspaceLayout">
+    <item><widget class="QGroupBox" name="listGroup"><property name="title"><string>Saved drafts</string></property><layout class="QVBoxLayout" name="listLayout">
+     <item><layout class="QFormLayout" name="filterLayout">
+      <item row="0" column="0"><widget class="QLabel" name="startLabel"><property name="text"><string>Start date</string></property><property name="buddy"><cstring>startDate</cstring></property></widget></item>
+      <item row="0" column="1"><widget class="QDateEdit" name="startDate"/></item>
+      <item row="1" column="0"><widget class="QLabel" name="endLabel"><property name="text"><string>End date</string></property><property name="buddy"><cstring>endDate</cstring></property></widget></item>
+      <item row="1" column="1"><widget class="QDateEdit" name="endDate"/></item>
+     </layout></item>
+     <item><widget class="QPushButton" name="refreshButton"><property name="text"><string>Apply date range</string></property></widget></item>
+     <item><widget class="QTableWidget" name="draftsTable"/></item>
+     <item><widget class="QPushButton" name="newButton"><property name="text"><string>New draft</string></property></widget></item>
+    </layout></widget></item>
+    <item><widget class="QGroupBox" name="editorGroup"><property name="title"><string>Invoice draft</string></property><layout class="QVBoxLayout" name="editorLayout">
+     <item><widget class="QLabel" name="identityLabel"><property name="text"><string>New draft — no invoice number</string></property></widget></item>
+     <item><layout class="QFormLayout" name="detailsLayout">
+      <item row="0" column="0"><widget class="QLabel" name="firmLabel"><property name="text"><string>Firm name</string></property><property name="buddy"><cstring>firmName</cstring></property></widget></item>
+      <item row="0" column="1"><widget class="QLineEdit" name="firmName"><property name="maxLength"><number>200</number></property></widget></item>
+      <item row="1" column="0"><widget class="QLabel" name="customerLabel"><property name="text"><string>Customer</string></property><property name="buddy"><cstring>customerName</cstring></property></widget></item>
+      <item row="1" column="1"><widget class="QLineEdit" name="customerName"><property name="maxLength"><number>200</number></property></widget></item>
+      <item row="2" column="0"><widget class="QLabel" name="dateLabel"><property name="text"><string>Invoice date</string></property><property name="buddy"><cstring>invoiceDate</cstring></property></widget></item>
+      <item row="2" column="1"><widget class="QDateEdit" name="invoiceDate"/></item>
+      <item row="3" column="0"><widget class="QLabel" name="taxLabel"><property name="text"><string>Draft tax split</string></property><property name="buddy"><cstring>taxMode</cstring></property></widget></item>
+      <item row="3" column="1"><widget class="QComboBox" name="taxMode"/></item>
+     </layout></item>
+     <item><widget class="QTableWidget" name="itemsTable"/></item>
+     <item><layout class="QHBoxLayout" name="itemActions">
+      <item><widget class="QPushButton" name="addItemButton"><property name="text"><string>Add item</string></property></widget></item>
+      <item><widget class="QPushButton" name="removeItemButton"><property name="text"><string>Remove selected item</string></property></widget></item>
+      <item><widget class="QPushButton" name="calculateButton"><property name="text"><string>Calculate</string></property></widget></item>
+     </layout></item>
+     <item><widget class="QLabel" name="totalLabel"><property name="text"><string>Save or calculate to see totals.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+     <item><layout class="QHBoxLayout" name="draftActions">
+      <item><widget class="QPushButton" name="saveButton"><property name="text"><string>Save draft</string></property></widget></item>
+      <item><widget class="QPushButton" name="pdfButton"><property name="text"><string>Save + draft PDF</string></property></widget></item>
+      <item><widget class="QPushButton" name="deleteButton"><property name="text"><string>Delete draft</string></property></widget></item>
+     </layout></item>
+     <item><widget class="QPushButton" name="revealButton"><property name="text"><string>Show generated PDF in folder</string></property></widget></item>
+    </layout></widget></item>
+   </layout></item>
+   <item><widget class="QLabel" name="statusLabel"><property name="text"><string>Ready</string></property><property name="wordWrap"><bool>true</bool></property><property name="textInteractionFlags"><set>Qt::TextSelectableByMouse</set></property></widget></item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

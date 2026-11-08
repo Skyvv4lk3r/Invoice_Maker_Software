@@ -1,0 +1,89 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+skinparam ranksep 85
+
+top to bottom direction
+class InvoiceSnapshot <<immutable financial facts>>
+class TemplateVersion <<immutable layout bundle>>
+class BrandingSnapshot <<immutable>> {
+  +id: UUID
+  +logoAssetId: UUID [0..1]
+  +signatureAssetId: UUID [0..1]
+  +appearanceHash: str
+}
+class RenderBinding <<immutable>> {
+  +id: UUID
+  +snapshotId: UUID
+  +templateVersionId: UUID
+  +brandingSnapshotId: UUID
+  +locale: en_IN
+  +modelSchemaVersion: int
+  +rendererSetVersion: str
+  +fingerprint: str
+}
+class InvoiceDocumentMapper <<application>> {
+  +map(facts, binding): InvoiceDocumentModel
+}
+class InvoiceDocumentModel <<immutable contract>> {
+  +header: FirmBlock
+  +invoiceDetails: InvoiceMetaBlock
+  +buyer: PartyBlock
+  +items: tuple of ItemRow
+  +totals: TotalsBlock
+  +footer: TermsAndPaymentBlock
+  +watermark: Draft | None
+}
+class DocumentArtifact <<immutable output>> {
+  +id: UUID
+  +bindingId: UUID
+  +format: PDF | DOCX
+  +rendererVersion: str
+  +sha256: str
+  +storageKey: str
+}
+RenderBinding "0..*" --> "1" InvoiceSnapshot
+RenderBinding "0..*" --> "1" TemplateVersion
+RenderBinding "0..*" --> "1" BrandingSnapshot
+InvoiceDocumentMapper --> RenderBinding
+InvoiceDocumentMapper --> InvoiceSnapshot
+InvoiceDocumentMapper ..> InvoiceDocumentModel : creates
+RenderBinding "1" -- "0..*" DocumentArtifact
+@enduml

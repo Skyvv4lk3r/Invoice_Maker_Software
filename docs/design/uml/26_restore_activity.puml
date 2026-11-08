@@ -1,0 +1,61 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+start
+:Owner selects backup and recovery credentials;
+:Decrypt into staging directory;\nverify archive paths, file hashes and format;
+:Validate SQLite integrity, foreign keys,\nschema compatibility and referenced files;
+if (Backup is valid?) then (yes)
+  :Enter maintenance mode;\npause jobs, take pre-restore backup, close connections;
+  :Set issuanceRecoveryRequired in staged dataset;\nactivate it using recoverable\ngeneration switch and recovery journal;
+  :Open restored dataset with recovery lock enforced;
+  :Allow viewing and export;\nblock issue / number allocation;
+  :Reconcile records and highest issued numbers\nwith post-backup invoices and accountant records;
+  if (Reconciliation complete for relevant sequences?) then (yes)
+    :Set next values above every issued or reserved number;\nrestore missing records or document gaps; log decision;
+    :Clear recovery lock and resume issuance;
+  else (no)
+    :Keep issuance locked; retain evidence\nand show outstanding reconciliation;
+  endif
+else (no)
+  :Reject restore; retain active dataset;
+endif
+stop
+@enduml

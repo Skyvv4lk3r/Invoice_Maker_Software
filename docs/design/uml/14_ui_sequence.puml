@@ -1,0 +1,61 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+autonumber
+participant "InvoiceEditorView" as View
+participant "InvoiceEditorViewModel" as VM
+participant "QtTaskBridge" as Bridge
+participant "Public backend port" as API
+participant "Application handler" as Handler
+View -> VM : User changes fields / clicks Save
+VM -> VM : Copy form values into immutable request DTO
+VM -> Bridge : submit(port call, requestId)
+Bridge -> API : Execute on worker with plain DTO
+API -> Handler : Dispatch typed request
+Handler --> API : ResultDTO or ApplicationErrorDTO
+API --> Bridge : Return plain result
+Bridge --> VM : Queued completion signal on GUI thread
+alt Result matches latest form request
+  VM -> VM : Map result into display state
+  VM --> View : Render totals / errors / save status
+else Result is stale
+  VM -> VM : Ignore stale presentation result
+end
+@enduml

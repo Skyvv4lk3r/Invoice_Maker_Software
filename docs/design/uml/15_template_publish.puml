@@ -1,0 +1,62 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+autonumber
+participant "TemplateSettingsViewModel" as UI
+participant "ITemplateCommands\nTemplate handler" as UC
+participant "Template validator" as V
+participant "Renderer ports / asset store" as Render
+database "Template repository + audit" as DB
+UI -> UC : Save candidate appearance and approved\nlayout selections
+UC -> DB : Persist draft; invalidate previous\nvalidation hash
+UI -> UC : Validate candidate(candidateHash)
+UC -> V : Check required fields, schema, assets and\nformats
+V -> Render : Produce representative PDF and DOCX samples
+Render --> V : Sample artifact IDs or typed errors
+V --> UC : ValidationReport tied to candidateHash
+UC -> DB : Store report and sample references
+UC --> UI : Report and sample artifact IDs
+UI -> UI : Owner reviews PDF and DOCX layout samples
+UI -> UC : Publish(candidateHash, reviewReceipt)
+UC -> DB : Compare hash; append immutable\nTemplateVersion + audit
+UC --> UI : Published version; not silently activated
+UI -> UC : Set default for future invoices
+UC -> DB : Update DefaultTemplateSelection + audit
+@enduml

@@ -1,0 +1,102 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+top to bottom direction
+class FirmProfile {
+  +id: UUID
+  +name: str
+  +gstin: str
+  +address: Address
+  +bankDetails: str
+}
+class Customer {
+  +id: UUID
+  +name: str
+  +gstin: str [0..1]
+  +contact: ContactDetails
+  +active: bool
+}
+class CatalogueItem {
+  +id: UUID
+  +kind: Goods | Service
+  +description: str
+  +defaultPrice: Decimal
+  +hsnSac: str
+  +taxSetting: TaxSetting
+}
+class SalesInvoice <<aggregate root>>
+class PaymentEntry {
+  +id: UUID
+  +amount: Money
+  +receivedOn: LocalDate
+  +kind: Receipt | Reversal
+  +reference: str
+}
+class SalesAdjustment <<aggregate root>> {
+  +id: UUID
+  +kind: CreditNote | DebitNote
+  +noteDate: LocalDate
+  +number: PositiveInt [0..1]
+  +status: Draft | Issued | Cancelled
+  +reason: str
+}
+class AuditEvent <<append only>> {
+  +id: UUID
+  +aggregateId: UUID
+  +action: str
+  +actor: LocalUserId
+  +at: Instant
+  +beforeAfter: ChangeRecord
+}
+class DocumentArtifact {
+  +bindingId: UUID
+  +format: PDF | DOCX
+  +rendererVersion: str
+  +relativePath: str
+  +contentHash: str
+}
+FirmProfile "1" -- "0..*" SalesInvoice
+Customer "0..1" -- "0..*" SalesInvoice : source master
+CatalogueItem ..> SalesInvoice : copied line defaults
+SalesInvoice "1" -- "0..*" PaymentEntry
+SalesInvoice "1..*" -- "0..*" SalesAdjustment : allocation with per-invoice amounts
+SalesInvoice "1" -- "0..*" AuditEvent
+SalesInvoice "1" -- "0..*" DocumentArtifact : via RenderBinding
+@enduml

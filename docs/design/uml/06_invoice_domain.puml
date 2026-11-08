@@ -1,0 +1,108 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+skinparam ranksep 85
+
+top to bottom direction
+class SalesInvoice <<aggregate root>> {
+  +id: UUID
+  +invoiceDate: LocalDate
+  +number: PositiveInt [0..1]
+  +financialYear: FiscalYear
+  +state: Draft | Issued | Cancelled | Deleted
+  +rowVersion: int
+  +editDraft(changes)
+  +issue(number, snapshotId)
+  +cancel(reason)
+}
+class DraftLine <<entity>> {
+  +id: UUID
+  +quantity: Decimal
+  +unitPrice: Decimal
+  +discount: Decimal
+  +taxInput: TaxInput
+}
+class InvoiceSnapshot <<immutable>> {
+  +id: UUID
+  +revision: int
+  +invoiceDate: LocalDate
+  +invoiceNumber: PositiveInt
+  +ruleVersion: str
+  +capturedAt: Instant
+  +contentHash: str
+}
+class FrozenLine <<value object>> {
+  +description: str
+  +kind: Goods | Service
+  +hsnSac: str
+  +quantity: Decimal
+  +unitPrice: Decimal
+  +taxBreakdown: TaxBreakdown
+}
+class PartySnapshot <<value object>> {
+  +name: str
+  +address: Address
+  +gstin: str [0..1]
+  +stateCode: str
+  +bankDetails: str [0..1]
+}
+class InvoiceTotals <<value object>> {
+  +taxable: Money
+  +taxes: TaxBreakdown
+  +roundOff: Money
+  +grandTotal: Money
+  +amountInWords: str
+}
+class Money <<value object>> {
+  +paise: int
+  +currency: INR
+}
+class FiscalYear <<value object>> {
+  +startYear: int
+  +fromInvoiceDate(date): FiscalYear
+}
+SalesInvoice "1" *-- "0..*" DraftLine
+SalesInvoice "1" *-- "0..*" InvoiceSnapshot
+SalesInvoice "1" *-- "1" FiscalYear
+InvoiceSnapshot "1" *-- "1..*" FrozenLine
+InvoiceSnapshot "1" *-- "2" PartySnapshot : firm and buyer
+InvoiceSnapshot "1" *-- "1" InvoiceTotals
+InvoiceTotals ..> Money
+@enduml

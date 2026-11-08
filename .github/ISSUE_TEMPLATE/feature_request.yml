@@ -1,0 +1,16 @@
+name: Feature request
+description: Propose an improvement to the invoice workflow.
+title: '[Feature] '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User need
+      description: Explain the task and desired outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What would demonstrate that this works?

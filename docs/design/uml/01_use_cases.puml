@@ -1,0 +1,69 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+top to bottom direction
+actor Owner
+actor "Customer / accountant" as Recipient
+rectangle "Invoice Desktop - version 1" {
+  usecase "Maintain firm, customers\nand goods / services" as Masters
+  usecase "Create, calculate, save\nand issue sales invoices" as Sales
+  usecase "Configure, preview, validate\nand publish invoice templates" as Templates
+  usecase "Find records by dates,\nnumber and customer" as Query
+  usecase "Correct, cancel and\nrecord adjustments / payments" as Manage
+  usecase "Generate PDF / DOCX\nand print or reveal files" as Docs
+  usecase "Export all selected records\nas ZIP + Excel / CSV" as Export
+  usecase "Back up and restore\ncomplete local dataset" as Backup
+}
+Owner --> Masters
+Owner --> Sales
+Owner --> Templates
+Owner --> Query
+Owner --> Manage
+Owner --> Docs
+Owner --> Export
+Owner --> Backup
+Docs ..> Recipient : exported files via owner
+Export ..> Recipient : accountant package via owner
+Masters -[hidden]down-> Query
+Query -[hidden]down-> Export
+Sales -[hidden]down-> Manage
+Manage -[hidden]down-> Backup
+Templates -[hidden]down-> Docs
+@enduml

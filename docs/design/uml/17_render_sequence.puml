@@ -1,0 +1,67 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+autonumber
+participant "Local job runner" as Runner
+participant "Binding / asset / job ports" as Read
+participant "IInvoiceRenderer" as Renderer
+participant "Artifact read / write ports" as Files
+Runner -> Read : Claim job; load binding, frozen facts and\nassets
+Read --> Runner : Validated immutable input and artifactKey
+Runner -> Files : Resolve existing published artifactKey
+alt Verified artifact already exists
+  Files --> Runner : Existing artifact reference
+else Render required
+  Runner -> Runner : Map financial facts to neutral document\nmodel
+  Runner -> Renderer : render(model, bundle, assets)
+  Renderer --> Runner : RenderedDocument or typed error
+  alt Rendering succeeded
+    Runner -> Files : Temporary write, flush and atomic\npublication
+    Files --> Runner : Durable artifact reference and hash
+  else Rendering failed
+    Runner -> Read : Mark job FAILED with safe diagnostics
+  end
+end
+alt Durable verified artifact is available
+  Runner -> Read : Transaction: register artifact and complete\njob
+else No final artifact
+  note over Runner,Files : Invoice remains issued; retry the same job without renumbering
+end
+@enduml

@@ -1,0 +1,70 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #456478
+skinparam ArrowThickness 1.5
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam classBackgroundColor #F5F9FB
+skinparam classBorderColor #35556B
+skinparam interfaceBackgroundColor #EAF7F4
+skinparam interfaceBorderColor #147D73
+skinparam componentBackgroundColor #F1F7FB
+skinparam componentBorderColor #35556B
+skinparam packageBackgroundColor #FCFDFE
+skinparam packageBorderColor #B9CAD4
+skinparam stateBackgroundColor #EDF7F5
+skinparam stateBorderColor #147D73
+skinparam noteBackgroundColor #FFF6DE
+skinparam noteBorderColor #D1B46A
+skinparam actorBorderColor #35556B
+skinparam usecaseBackgroundColor #F2F8FC
+skinparam usecaseBorderColor #35556B
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EAF3F8
+skinparam sequenceParticipantBorderColor #35556B
+skinparam sequenceLifeLineBorderColor #839BAA
+skinparam sequenceGroupBackgroundColor #F5F9FB
+skinparam activityBackgroundColor #EFF7FA
+skinparam activityBorderColor #35556B
+skinparam activityDiamondBackgroundColor #EAF7F4
+skinparam activityDiamondBorderColor #147D73
+hide empty members
+
+autonumber
+actor Owner
+participant "IExportCommands / handler" as UC
+database "SQLite query + manifest store" as DB
+participant "Export worker" as Worker
+participant "Filesystem / Windows" as OS
+Owner -> UC : Select startDate, endDate, statuses,\nformats
+UC -> UC : Validate start <= end
+UC -> DB : Capture all matching IDs and revisions in\none snapshot
+DB --> UC : Frozen manifest, counts and totals
+UC --> Owner : Preview selection and totals
+Owner -> UC : Generate this package
+UC -> DB : Persist manifest + pending export job
+Worker -> DB : Claim job; load frozen manifest
+loop Every manifest member (not just visible UI page)
+  Worker -> Worker : Reuse / render pinned binding; record hash
+end
+Worker -> Worker : Write invoice register, line register and\nGST summary
+alt Any required file failed
+  Worker -> DB : Mark FAILED; retain precise failure list
+  UC --> Owner : Retry; do not report a complete package
+else Every required file succeeded
+  Worker -> OS : Write ZIP to temp path, then atomic rename
+  Worker -> DB : Commit artifact manifest and completed\nexport
+  UC --> Owner : Package ready; changes since preview\nflagged
+  Owner -> UC : Open files for sharing
+  UC -> OS : Reveal generated ZIP / files
+  note over Owner,OS : Owner attaches package in email or WhatsApp
+end
+@enduml

@@ -1,0 +1,310 @@
+[
+  {
+    "slug": "01_use_cases",
+    "title": "Owner workflows and system scope",
+    "kind": "Use-case diagram",
+    "purpose": "The owner operates the offline desktop app; external recipients receive exported files and have no direct database access.",
+    "notes": [
+      "Confirmed scope: sales invoices for goods and services; numeric-only annual numbering; automatic totals and words; PDF/DOCX; inclusive date-range view and sharing. Supporting master, payment and backup features remain the proposed baseline.",
+      "Template configuration is now a first-class workflow. The initial release uses approved A4 PDF/DOCX layout pairs with editable branding and optional content; arbitrary executable templates and a full canvas designer are outside version 1.",
+      "Sharing prepares files and reveals their location. The owner attaches them in email or WhatsApp. Purchase capture, automatic message delivery, cloud links and multi-computer access are future modules."
+    ]
+  },
+  {
+    "slug": "02_package_boundaries",
+    "title": "Frontend, backend and dependency direction",
+    "kind": "Package diagram",
+    "purpose": "The desktop frontend and backend are separate Python packages, connected by explicit contracts rather than concrete implementation imports.",
+    "notes": [
+      "The UI imports application.contracts, not handlers, domain aggregates, SQLAlchemy models or renderer libraries. DTOs contain plain IDs, dates, integer paise, tuples and status/error codes; no QObject, QWidget, Session or library-specific objects cross the boundary.",
+      "Application handlers and domain rules never import presentation. Domain and contract packages use the standard library only. Only bootstrap knows concrete frontend, handlers and infrastructure adapters; no global service locator is exposed to views.",
+      "This is an in-process modular monolith, not a network API. Logical separation is sufficient for version 1. A future HTTP/IPC adapter may implement the same public contracts, but needs explicit serialization, authentication and failure semantics."
+    ]
+  },
+  {
+    "slug": "03_presentation",
+    "title": "Passive views, view models and asynchronous calls",
+    "kind": "Class diagram",
+    "purpose": "Widgets manage display and input. View models translate user actions into backend requests and map result DTOs to UI state.",
+    "notes": [
+      "A view model copies form values into an immutable request before dispatch. QtTaskBridge owns QThreadPool integration and queues results back to the GUI thread. Each backend operation creates its own unit of work; no database connection is shared through a widget.",
+      "Client-side checks improve interaction, while backend validation remains authoritative. Live totals come from IInvoiceQueries.calculateDraft; the frontend does not duplicate tax or amount-in-words formulas. Stale asynchronous results are ignored by request ID.",
+      "The list view uses paged queries. Export receives the filter itself, not the visible row collection. TemplateSettingsViewModel also receives template queries and preview ports; the diagram shows its command dependency to keep this view readable."
+    ]
+  },
+  {
+    "slug": "04_invoice_api",
+    "title": "Public invoice contracts and plain DTOs",
+    "kind": "Class diagram",
+    "purpose": "Inbound ports are the stable frontend/backend boundary. Implementations can be called by Qt, a headless test or a later transport adapter.",
+    "notes": [
+      "Use frozen dataclasses and typing.Protocol for these contracts. Signatures abbreviate Result[T, ApplicationErrorDTO]; every method has typed success or failure. DTOs are snapshots of data, never mutable domain or ORM objects.",
+      "InvoiceIssueService implements all three port methods and delegates to separate IssueInvoiceHandler, CorrectInvoiceHandler and CancelInvoiceHandler objects. A request ID plus payload hash makes issuance idempotent; reusing a key with different input is a conflict. expectedRevision detects stale edits. Invoice number is null for drafts and a positive integer after issuance; the internal UUID remains the durable identity across financial years.",
+      "Errors include VALIDATION, CONFLICT, NOT_FOUND, UNSUPPORTED_TAX_TREATMENT, TEMPLATE_UNAVAILABLE, STORAGE_FAILURE and RECOVERY_REQUIRED. The UI translates codes to messages; backend exceptions and SQL traces remain in local diagnostics."
+    ]
+  },
+  {
+    "slug": "05_document_api",
+    "title": "Template, preview, export and job contracts",
+    "kind": "Class diagram",
+    "purpose": "The frontend requests capabilities. It does not choose renderer classes, pass database sessions or read internal artifact paths.",
+    "notes": [
+      "Additional cohesive ports cover IMasterDataCommands/Queries, IPaymentCommands/Queries and IBackupCommands/Queries. Capability groups are injected separately; a screen receives only the capabilities it uses.",
+      "Preview requests bind both invoice revision and template candidate hash. A later edit cannot quietly change the content of an already-running preview. UI polling of IJobQueries or QtTaskBridge signals uses plain JobStatusDTO objects.",
+      "Artifact IDs are resolved by backend services. Export/save/open operations validate selected destinations. Windows handoff does not mean sent or delivered; direct email or messaging would require a separate delivery contract."
+    ]
+  },
+  {
+    "slug": "06_invoice_domain",
+    "title": "Invoice identity and immutable financial facts",
+    "kind": "Class diagram",
+    "purpose": "The sales aggregate contains financial facts and lifecycle rules. It has no knowledge of Qt widgets, DOCX files or PDF layout.",
+    "notes": [
+      "Drafts can be empty; issuance requires at least one valid line. The displayed invoice number is only 1, 2, 3, etc. Financial year is internal metadata, derived from invoice date, with separate sequences beginning at 1.",
+      "FrozenLine is a distinct value object, not a pointer back to mutable draft or catalogue data. Issued party, line and total snapshots survive later changes to customer details, prices or tax settings.",
+      "Document appearance is pinned by a separate RenderBinding (view 10). SalesInvoice and InvoiceSnapshot do not depend on TemplateVersion, ReportLab or docxtpl. Snapshot values include approved terms and payment details; templates cannot override financial facts."
+    ]
+  },
+  {
+    "slug": "07_calculation",
+    "title": "Calculation policy and formatting responsibilities",
+    "kind": "Class diagram",
+    "purpose": "There is one authoritative calculation path. The UI and all document formats consume its results.",
+    "notes": [
+      "InvoiceDocumentMapper consumes frozen financial facts. It has no dependency on InvoiceCalculator and cannot invoke tax calculations. Sharing a value-object schema does not couple document layout to the calculation implementation.",
+      "Use Decimal for quantity, prices, discounts, rates and intermediate values; integer paise for settled amounts. Configure and test rounding explicitly. Convert the final rounded amount, including paise, to words.",
+      "Tax policy uses explicit supply context and approved treatment. It must not infer every service or special transaction solely from two state codes. Unsupported treatments return validation errors; a template never chooses a tax rate."
+    ]
+  },
+  {
+    "slug": "08_supporting_domain",
+    "title": "Masters, payments, adjustments and audit history",
+    "kind": "Class diagram",
+    "purpose": "Reusable masters speed entry. Payments, tax adjustments, document files and audit history remain separate concepts.",
+    "notes": [
+      "Payment status is derived from receipts, reversals and allocated adjustments; it is not the invoice lifecycle. A paid invoice does not disappear from the date-range sales register.",
+      "Credit/debit notes are separate issued documents with their own numeric sequence per financial year and document kind. They may reference older invoices and are selected by note date in the adjustment register.",
+      "Audit history is append-only through application contracts. This is an audit trail, not a claim of tamper-proof storage against a Windows administrator."
+    ]
+  },
+  {
+    "slug": "09_template_domain",
+    "title": "Template catalogue, revisions and appearance",
+    "kind": "Class diagram",
+    "purpose": "Template editing is independent of invoice calculation. Publishing produces a versioned PDF/DOCX bundle with validated appearance settings.",
+    "notes": [
+      "Version 1 offers approved layouts and constrained appearance settings. PDF layout descriptors and DOCX files are paired assets. Application UI themes and invoice appearance are separate settings; a dark application theme does not recolour printed invoices.",
+      "Validation is tied to the exact candidate hash. Any edit invalidates the old report. Publishing requires required-field checks, both format samples and recorded visual review; python-docx/docxtpl generates DOCX but does not itself verify Word pagination.",
+      "TemplateVersion content is immutable after publication; retirement is availability metadata only. Existing bindings may still use retired versions. Changing the default affects new bindings and never rewrites historical documents."
+    ]
+  },
+  {
+    "slug": "10_render_binding",
+    "title": "Financial facts, template binding and document model",
+    "kind": "Class diagram",
+    "purpose": "A binding freezes which layout, branding and rendering versions are used for a particular financial snapshot.",
+    "notes": [
+      "The binding fingerprint covers snapshot content, template bundle, branding assets, locale, document-model schema and renderer-set version. Artifact uniqueness uses binding ID + format + concrete renderer version, so a logo or template change cannot overwrite an old file.",
+      "Header, buyer, invoice metadata, item rows, totals and footer are explicit template sections. Invoice number, GST amounts and amount in words are supplied values. The mapper formats these values; it does not calculate or alter them.",
+      "Preview uses a distinct PreviewBinding with captured draft facts, draft revision and candidate hash; it has no issued number and always carries a DRAFT watermark. A new appearance for an issued invoice creates a labelled derived copy rather than replacing the canonical issued artifact."
+    ]
+  },
+  {
+    "slug": "11_render_adapters",
+    "title": "PDF and Word adapters behind one render contract",
+    "kind": "Class diagram",
+    "purpose": "Both adapters accept the same neutral document model. Only the adapters import ReportLab, docxtpl or python-docx.",
+    "notes": [
+      "PDF uses approved ReportLab layouts; DOCX uses approved .docx placeholders and item-row loops through docxtpl. Use strict missing-field validation and XML escaping. Approved tags substitute fields, repeat rows and select optional blocks; templates do not contain financial formulas. Arbitrary executable uploads are outside the initial release.",
+      "Renderers preserve data and return bytes plus format metadata or a typed rendering error. They never allocate invoice numbers, write business records, show dialogs or perform network calls. Font, logo and signature assets are resolved before rendering.",
+      "PDF and Word must agree on facts, totals and branding. They are not promised identical pagination or pixels. The canonical PDF is archived; historical layout reproducibility requires retained assets and renderer versions, not only a template name."
+    ]
+  },
+  {
+    "slug": "12_transaction_ports",
+    "title": "Atomic issuance using segregated persistence ports",
+    "kind": "Class diagram",
+    "purpose": "A work-scope factory supplies narrow repository interfaces participating in one transaction; repositories do not commit independently.",
+    "notes": [
+      "This replaces the earlier IIssuanceRecordWriter grouping. Snapshot storage, audit append and job enqueue have separate interfaces. IssuanceWorkScope is an immutable dependency bundle, not a service locator or a class containing business logic.",
+      "SQLAlchemyUnitOfWork and SQLAlchemy repositories are infrastructure adapters over SQLite. Every repository in a scope uses the same session/connection. Verify emitted transaction SQL actually takes the intended SQLite write lock; ORM defaults alone are not the numbering guarantee.",
+      "The work scope also supplies an idempotency-receipt repository and read-only template/default lookup; these are omitted from the picture to keep it legible. All issued rows, binding, counter, audit, job and request receipt commit or roll back together."
+    ]
+  },
+  {
+    "slug": "13_issue_sequence",
+    "title": "Issue once while pinning the exact template version",
+    "kind": "Sequence diagram",
+    "purpose": "The transaction fixes both legal facts and document appearance. Rendering is deferred to a durable job after issuance.",
+    "notes": [
+      "Number allocation uses the scope (firm, financial year, document kind), with database uniqueness and a transaction. The first number in a new financial year is 1. No clock-triggered reset job or MAX(number)+1 is used.",
+      "Validation is authoritative in the backend. Issued numbers/dates are not ordinary editable fields. Template selection inside the issuance snapshot prevents an active-template change racing with issuance.",
+      "The diagram shows the successful commit path. Any database failure rolls back if still active; after an uncertain response, look up the same request ID before retry. PDF failure never reissues the invoice. GST/IRP applicability must be resolved before production release."
+    ]
+  },
+  {
+    "slug": "14_ui_sequence",
+    "title": "Frontend/backend interaction without shared UI objects",
+    "kind": "Sequence diagram",
+    "purpose": "The backend knows nothing about the window that invoked it; the frontend knows nothing about the repository or renderer implementation.",
+    "notes": [
+      "Only QtTaskBridge and view/view-model code use Qt signals, QThreadPool or widget types. The handler is a normal Python object and can execute in a headless test with no QApplication.",
+      "Frontend cancellation of waiting does not undo a committed invoice. The UI reconciles command results by request ID. Safe job cancellation is a separate backend capability and applies only at defined checkpoints.",
+      "Live calculation uses the same public boundary. A small local calculation can execute synchronously when measured safe; all database/file-heavy operations use the bridge so the GUI event loop remains responsive."
+    ]
+  },
+  {
+    "slug": "15_template_publish",
+    "title": "Editing, validating and publishing a template",
+    "kind": "Sequence diagram",
+    "purpose": "Publishing creates a validated immutable bundle; activating it changes which version is selected for future invoice issuance.",
+    "notes": [
+      "Template validation checks required invoice fields, compatible model schema, approved fonts and assets, placeholder completeness, long text and multipage item tables. It does not calculate GST or change invoice values.",
+      "PDF and DOCX samples must be inspected. A DOCX generation library is not a Word layout engine, so visual approval is recorded explicitly. Changing a candidate after validation or review invalidates that evidence.",
+      "Store immutable assets successfully before committing references to a published bundle. A failed metadata transaction may leave removable unreferenced assets, but must not publish a version pointing to missing files. Publishing and activation are idempotent audited commands."
+    ]
+  },
+  {
+    "slug": "16_preview_sequence",
+    "title": "Preview through the actual document renderer",
+    "kind": "Sequence diagram",
+    "purpose": "Preview follows the same mapper and format adapter as final output, with explicit draft identity and captured template inputs.",
+    "notes": [
+      "A preview is not a screenshot of the Qt form. PDF preview opens the generated PDF; DOCX preview opens the generated Word file in the chosen viewer. Embedded preview can be added behind a presentation adapter later.",
+      "PreviewBinding has captured draft facts, revision, candidate hash and branding but no issued invoice number. Its artifacts have separate retention and keys, carry a DRAFT watermark and never replace canonical issued documents.",
+      "Background workers update job records, not view models. The UI obtains plain status DTOs through IJobQueries. If either the draft or template changes, a completed preview is marked stale and can be regenerated."
+    ]
+  },
+  {
+    "slug": "17_render_sequence",
+    "title": "Recoverable rendering through backend-owned ports",
+    "kind": "Sequence diagram",
+    "purpose": "The backend publishes durable artifacts and job state. The GUI observes results through public queries; the worker has no GUI reference.",
+    "notes": [
+      "A job loads the financial snapshot, published template bundle and branding snapshot through RenderBinding. The mapper prepares a neutral model and the renderer only formats it; neither changes financial facts or invoice state.",
+      "The unique artifact key includes binding ID, format and renderer version. A crash after file publication but before database registration is repaired by verifying the existing artifact and completing the same job.",
+      "File publication and SQLite commit are separate atomic boundaries. Durable jobs bridge them. UI polling or presentation-adapter notifications obtain JobStatusDTO through IJobQueries; there are no worker-to-widget calls."
+    ]
+  },
+  {
+    "slug": "18_export_sequence",
+    "title": "Date-range export with frozen members and bindings",
+    "kind": "Sequence diagram",
+    "purpose": "The package matches a frozen selection, including records on every result page and across multiple financial years.",
+    "notes": [
+      "Capture every matching record across all result pages using inclusive invoice dates. Export members pin snapshot/binding IDs, selected status, revision and calculated register values. Drafts require an explicit option and a DRAFT label; paid and unpaid issued invoices are both included.",
+      "Cancelled originals remain preserved and identifiable in a separate cancellation register. Credit/debit notes are listed by note date and may reference older invoices. Captured manifests make totals and generated documents consistent despite later edits.",
+      "Separate financial-year folders prevent filename collisions while the printed invoice number stays numeric only. The package contains PDFs, optional DOCX, invoice/line registers and GST summaries. Handoff is not an automated GST filing, upload schema certification or delivery receipt."
+    ]
+  },
+  {
+    "slug": "19_invoice_states",
+    "title": "Invoice lifecycle independent of payment and rendering",
+    "kind": "State diagram",
+    "purpose": "Draft editing remains convenient. Issued records preserve traceable history and use explicit correction actions.",
+    "notes": [
+      "Deletion is an application operation on drafts, represented by a tombstone rather than silent erasure. Issued invoices cannot be physically deleted through the UI.",
+      "A clerical revision must pass a CorrectionPolicy and keep the original snapshot and artifact. Changes to amount, tax, invoice date across years or identity are not generic edits.",
+      "Cancellation rules depend on document treatment and filing state; they require a reason and linked settlement handling. External GST/IRP deadlines or permissions must be added if applicable; this lifecycle is not a substitute for those rules."
+    ]
+  },
+  {
+    "slug": "20_template_states",
+    "title": "Template lifecycle and immutable publication",
+    "kind": "State diagram",
+    "purpose": "Candidate changes are editable; published content is immutable, and default selection is separate from version identity.",
+    "notes": [
+      "A candidate cannot be published using a validation report for another hash. Review approval is tied to both PDF and DOCX sample artifacts generated from that candidate.",
+      "Retiring a version prevents new selection while preserving existing documents. The active default cannot be retired until a valid replacement is selected or issuance is explicitly blocked.",
+      "Referenced versions, fonts, logos and source layouts are not hard-deleted. A new logo, layout or font selection creates a new version/branding snapshot for new bindings; historical artifacts remain accessible."
+    ]
+  },
+  {
+    "slug": "21_job_states",
+    "title": "Job lifecycle, retries and handoff semantics",
+    "kind": "State diagram",
+    "purpose": "The job lifecycle applies to rendering and export. Backup tasks use the same progress/error concepts but maintain their own backup records.",
+    "notes": [
+      "User cancellation of an export never cancels an issued invoice. A pending canonical PDF job is retried rather than silently discarded.",
+      "Progress and error signals are queued back to the GUI thread. Each worker uses its own database connection; widgets are manipulated only on the main thread.",
+      "Disk-full, permission and template errors are distinct retryable outcomes. Logs avoid full customer details and document content unless explicitly needed for an audited local diagnostic."
+    ]
+  },
+  {
+    "slug": "22_invoice_schema",
+    "title": "Invoice persistence and annual numbering constraints",
+    "kind": "Class diagram with table stereotypes",
+    "purpose": "Storage rows are infrastructure models mapped to domain aggregates; the frontend never receives a database row or SQLAlchemy object.",
+    "notes": [
+      "Enforce UNIQUE(firm_id, fy_start, invoice_no) WHERE invoice_no IS NOT NULL, positive integer numbers no longer than 16 digits, UNIQUE(invoice_id, revision), and a unique request receipt. Credit/debit note tables use their own document-kind scopes.",
+      "Enable foreign keys on each connection and index invoice-date/status/customer queries. Use ISO local dates for invoices, UTC timestamps for events, Decimal strings for exact inputs and integer paise for settled money. Reject non-finite numbers and invalid quantities.",
+      "SQLAlchemyUnitOfWork performs explicit transactions. Alembic versioned migrations run after a verified pre-upgrade backup. Repository mappers detach domain objects from ORM sessions; optimistic row versions prevent overwriting another edit."
+    ]
+  },
+  {
+    "slug": "23_template_schema",
+    "title": "Template, branding and document persistence",
+    "kind": "Class diagram with table stereotypes",
+    "purpose": "Templates and branding are durable versioned records, not a mutable file path stored on each invoice.",
+    "notes": [
+      "Enforce UNIQUE(family_id, version) and UNIQUE(binding_id, format, renderer_version). Template/branding asset link tables preserve referenced hashes. Active template selection is stored separately per firm and document kind.",
+      "Additional tables store template_validation_report, template_review_receipt, default_template_selection and preview_binding. A draft preview uses preview_artifact storage with its own lifecycle; nullable polymorphic references must not weaken issued-artifact foreign keys.",
+      "Keep template bundles, font assets, logos and canonical documents in the backup manifest. Only unreferenced temporary assets can be cleaned automatically; retirement is not deletion. Filesystem publication is atomic, then metadata references are committed."
+    ]
+  },
+  {
+    "slug": "24_operational_schema",
+    "title": "Export manifests, jobs, payments and audit records",
+    "kind": "Class diagram with table stereotypes",
+    "purpose": "Operational state is separate from invoice identity and template versions. A completed export is a frozen record of what was prepared.",
+    "notes": [
+      "Export-member document references are logical references in this view. Implementation uses typed membership tables/foreign keys for sales, adjustments and draft previews, or a checked common document-snapshot index; unchecked polymorphic IDs are not acceptable.",
+      "Jobs use unique idempotency keys, bounded retries and expiring leases. Audit records capture backend mutations and actor/correlation information. An append-only application interface is not a claim of resistance to local administrator tampering.",
+      "Payment status derives from receipts, reversals and allocated credit/debit notes. Track both amount outstanding and any customer credit/refund balance rather than discarding negative net balances. Payments do not change invoice date or tax-register inclusion."
+    ]
+  },
+  {
+    "slug": "25_backup_activity",
+    "title": "Consistent backup including every template dependency",
+    "kind": "Activity diagram",
+    "purpose": "A recoverable backup contains the database plus every referenced document, template and asset, not just an isolated .db file.",
+    "notes": [
+      "Pause new writes and drain active workers through a maintenance gate while taking the database snapshot and copying referenced assets. Back up invoice/adjustment records, audit, template versions, branding, fonts, document artifacts, settings and restore metadata together.",
+      "Use SQLite backup facilities and maintained authenticated encryption with a user-held recovery mechanism. Verify hashes and integrity before marking success. A key protected only for one Windows installation is insufficient for recovery on another computer.",
+      "Keep multiple dated generations. Copy only completed encrypted archives to the configured cloud-synced folder or external drive. A completed local copy into a sync folder is not proof of cloud upload. Never cloud-sync the active database."
+    ]
+  },
+  {
+    "slug": "26_restore_activity",
+    "title": "Restore with version integrity and numbering reconciliation",
+    "kind": "Activity diagram",
+    "purpose": "Restoring data and resuming invoice issuance are separate operations because a backup cannot reveal invoices issued after it was created.",
+    "notes": [
+      "No blind overwrite of a live database, WAL file or artifact directory. A staged dataset is verified first; a recoverable generation-switch manifest makes an interrupted restore diagnosable on next startup.",
+      "A restore reconciliation checks each financial-year/document-kind counter against evidence of all later issued numbers. If evidence is incomplete, issuance remains blocked; a restored counter alone is not sufficient.",
+      "Backup key recovery, cross-machine restore, invalid archives, interrupted activation and schema migration are explicit acceptance tests. Logs must not store encryption secrets."
+    ]
+  },
+  {
+    "slug": "27_deployment",
+    "title": "Runtime deployment with separate frontend and backend packages",
+    "kind": "Deployment diagram",
+    "purpose": "Core invoice operations are local and offline. Internet access is needed only for external messaging or cloud backup sync.",
+    "notes": [
+      "Version 1 assumes one principal workstation. The installer and updates keep application binaries separate from user data; upgrades take a backup and run versioned migrations.",
+      "SQLite is not shared directly between multiple computers. A later multi-computer version introduces an application service and centrally managed database behind repository interfaces.",
+      "Windows permissions and device encryption protect local storage at the operating-system boundary. SQLite is not automatically encrypted by adding an app password. No public cloud link service or automatic message sender is deployed in version 1."
+    ]
+  },
+  {
+    "slug": "28_purchase_extension",
+    "title": "Purchase expansion through independent module contracts",
+    "kind": "Class diagram",
+    "purpose": "Purchase capture becomes a separate module with shared export and value-object contracts, not a subclass forced to behave like an issued sales invoice.",
+    "notes": [
+      "A purchase retains the supplier-issued invoice number, which may contain letters and symbols. It does not consume the firm's numeric sales sequence.",
+      "A minimal InvoiceBase would weaken lifecycle and numbering rules. Separate aggregates preserve valid contracts while shared register adapters permit combined viewing/export later.",
+      "Supplier management, purchase validation, input-tax-credit review and reconciliation with GST records are explicitly future scope. The current sales app is not a complete accounting or GST-return filing system."
+    ]
+  }
+]
