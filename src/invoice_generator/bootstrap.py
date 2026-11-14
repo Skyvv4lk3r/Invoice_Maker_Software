@@ -17,13 +17,17 @@ from invoice_generator.application.contracts.dto import (
 )
 from invoice_generator.application.contracts.interfaces import (
     IArtifactActions,
+    IDateRangeExportCommands,
     IDraftPdfCommands,
+    IDraftPreviewQueries,
     IInvoiceDraftCommands,
     IInvoiceQueries,
 )
-from invoice_generator.application.handlers.documents import DraftPdfService
+from invoice_generator.application.handlers.documents import DateRangeExportService, DraftPdfService
 from invoice_generator.application.handlers.drafts import DraftService
+from invoice_generator.infrastructure.documents.bundle import DraftBundleRenderer
 from invoice_generator.infrastructure.documents.pdf import ReportLabDraftRenderer
+from invoice_generator.infrastructure.documents.word import WordDraftRenderer
 from invoice_generator.infrastructure.files import LocalArtifactStore
 from invoice_generator.infrastructure.persistence.database import create_database
 from invoice_generator.infrastructure.persistence.repositories import SqlAlchemyDraftUnitOfWork
@@ -37,6 +41,9 @@ class Backend:
     artifacts: IArtifactActions
     directory: Path
     _engine: object
+    words: IDraftPdfCommands
+    previews: IDraftPreviewQueries
+    range_exports: IDateRangeExportCommands
 
     def close(self):
         self._engine.dispose()
@@ -50,10 +57,14 @@ def build_backend(directory: Path) -> Backend:
         return SqlAlchemyDraftUnitOfWork(engine)
 
     drafts = DraftService(uow_factory)
-    documents = DraftPdfService(
-        uow_factory, ReportLabDraftRenderer(), LocalArtifactStore(directory / "exports")
+    store = LocalArtifactStore(directory / "exports")
+    pdf, word = ReportLabDraftRenderer(), WordDraftRenderer()
+    documents = DraftPdfService(uow_factory, pdf, store)
+    words = DraftPdfService(uow_factory, word, store, "docx")
+    bundles = DateRangeExportService(uow_factory, DraftBundleRenderer(pdf, word), store)
+    return Backend(
+        drafts, drafts, documents, documents, directory, engine, words, documents, bundles
     )
-    return Backend(drafts, drafts, documents, documents, directory, engine)
 
 
 def main(argv=None) -> int:
@@ -107,7 +118,15 @@ def main(argv=None) -> int:
         app = QApplication.instance() or QApplication([])
         app.setApplicationName("Invoice Generator")
         window = MainWindow(
-            DraftViewModel(backend.commands, backend.queries, backend.pdfs, backend.artifacts)
+            DraftViewModel(
+                backend.commands,
+                backend.queries,
+                backend.pdfs,
+                backend.artifacts,
+                backend.words,
+                backend.previews,
+                backend.range_exports,
+            )
         )
         window.show()
         if args.smoke:

@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from invoice_generator.application.contracts.dto import ArtifactDTO, DraftPdfModel
+from invoice_generator.application.contracts.dto import ArtifactDTO, DateRange, DraftPdfModel
 
 
 class IDraftPdfRenderer(Protocol):
@@ -9,4 +9,9 @@ class IDraftPdfRenderer(Protocol):
 
 class IArtifactStore(Protocol):
     def publish_pdf(self, data: bytes) -> ArtifactDTO: ...
+    def publish(self, data: bytes, extension: str) -> ArtifactDTO: ...
     def reveal(self, artifact_id: str) -> None: ...
+
+
+class IDraftBundleRenderer(Protocol):
+    def render(self, models: tuple[DraftPdfModel, ...], dates: DateRange) -> bytes: ...

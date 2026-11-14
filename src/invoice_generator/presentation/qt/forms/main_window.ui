@@ -1,57 +1,1837 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <ui version="4.0">
- <class>DraftWorkspace</class>
- <widget class="QWidget" name="DraftWorkspace">
-  <layout class="QVBoxLayout" name="rootLayout">
-   <property name="spacing"><number>14</number></property>
-   <property name="leftMargin"><number>20</number></property>
-   <property name="topMargin"><number>20</number></property>
-   <property name="rightMargin"><number>20</number></property>
-   <property name="bottomMargin"><number>20</number></property>
-   <item><widget class="QLabel" name="titleLabel"><property name="text"><string>Invoice Generator</string></property><property name="font"><font><pointsize>22</pointsize><bold>true</bold></font></property></widget></item>
-   <item><widget class="QLabel" name="buildLabel"><property name="text"><string>Development build · Draft invoices only · PDF copies are marked DRAFT</string></property></widget></item>
-   <item><layout class="QHBoxLayout" name="workspaceLayout">
-    <item><widget class="QGroupBox" name="listGroup"><property name="title"><string>Saved drafts</string></property><layout class="QVBoxLayout" name="listLayout">
-     <item><layout class="QFormLayout" name="filterLayout">
-      <item row="0" column="0"><widget class="QLabel" name="startLabel"><property name="text"><string>Start date</string></property><property name="buddy"><cstring>startDate</cstring></property></widget></item>
-      <item row="0" column="1"><widget class="QDateEdit" name="startDate"/></item>
-      <item row="1" column="0"><widget class="QLabel" name="endLabel"><property name="text"><string>End date</string></property><property name="buddy"><cstring>endDate</cstring></property></widget></item>
-      <item row="1" column="1"><widget class="QDateEdit" name="endDate"/></item>
-     </layout></item>
-     <item><widget class="QPushButton" name="refreshButton"><property name="text"><string>Apply date range</string></property></widget></item>
-     <item><widget class="QTableWidget" name="draftsTable"/></item>
-     <item><widget class="QPushButton" name="newButton"><property name="text"><string>New draft</string></property></widget></item>
-    </layout></widget></item>
-    <item><widget class="QGroupBox" name="editorGroup"><property name="title"><string>Invoice draft</string></property><layout class="QVBoxLayout" name="editorLayout">
-     <item><widget class="QLabel" name="identityLabel"><property name="text"><string>New draft — no invoice number</string></property></widget></item>
-     <item><layout class="QFormLayout" name="detailsLayout">
-      <item row="0" column="0"><widget class="QLabel" name="firmLabel"><property name="text"><string>Firm name</string></property><property name="buddy"><cstring>firmName</cstring></property></widget></item>
-      <item row="0" column="1"><widget class="QLineEdit" name="firmName"><property name="maxLength"><number>200</number></property></widget></item>
-      <item row="1" column="0"><widget class="QLabel" name="customerLabel"><property name="text"><string>Customer</string></property><property name="buddy"><cstring>customerName</cstring></property></widget></item>
-      <item row="1" column="1"><widget class="QLineEdit" name="customerName"><property name="maxLength"><number>200</number></property></widget></item>
-      <item row="2" column="0"><widget class="QLabel" name="dateLabel"><property name="text"><string>Invoice date</string></property><property name="buddy"><cstring>invoiceDate</cstring></property></widget></item>
-      <item row="2" column="1"><widget class="QDateEdit" name="invoiceDate"/></item>
-      <item row="3" column="0"><widget class="QLabel" name="taxLabel"><property name="text"><string>Draft tax split</string></property><property name="buddy"><cstring>taxMode</cstring></property></widget></item>
-      <item row="3" column="1"><widget class="QComboBox" name="taxMode"/></item>
-     </layout></item>
-     <item><widget class="QTableWidget" name="itemsTable"/></item>
-     <item><layout class="QHBoxLayout" name="itemActions">
-      <item><widget class="QPushButton" name="addItemButton"><property name="text"><string>Add item</string></property></widget></item>
-      <item><widget class="QPushButton" name="removeItemButton"><property name="text"><string>Remove selected item</string></property></widget></item>
-      <item><widget class="QPushButton" name="calculateButton"><property name="text"><string>Calculate</string></property></widget></item>
-     </layout></item>
-     <item><widget class="QLabel" name="totalLabel"><property name="text"><string>Save or calculate to see totals.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
-     <item><layout class="QHBoxLayout" name="draftActions">
-      <item><widget class="QPushButton" name="saveButton"><property name="text"><string>Save draft</string></property></widget></item>
-      <item><widget class="QPushButton" name="pdfButton"><property name="text"><string>Save + draft PDF</string></property></widget></item>
-      <item><widget class="QPushButton" name="deleteButton"><property name="text"><string>Delete draft</string></property></widget></item>
-     </layout></item>
-     <item><widget class="QPushButton" name="revealButton"><property name="text"><string>Show generated PDF in folder</string></property></widget></item>
-    </layout></widget></item>
-   </layout></item>
-   <item><widget class="QLabel" name="statusLabel"><property name="text"><string>Ready</string></property><property name="wordWrap"><bool>true</bool></property><property name="textInteractionFlags"><set>Qt::TextSelectableByMouse</set></property></widget></item>
-  </layout>
- </widget>
- <resources/>
- <connections/>
+  <class>InvoiceWorkspace</class>
+  <widget class="QWidget" name="InvoiceWorkspace">
+    <layout class="QHBoxLayout" name="rootLayout">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <item>
+        <widget class="QFrame" name="sidebar">
+          <property name="minimumWidth">
+            <number>184</number>
+          </property>
+          <property name="maximumWidth">
+            <number>184</number>
+          </property>
+          <layout class="QVBoxLayout" name="sidebarLayout">
+            <property name="leftMargin">
+              <number>20</number>
+            </property>
+            <property name="rightMargin">
+              <number>20</number>
+            </property>
+            <property name="topMargin">
+              <number>20</number>
+            </property>
+            <property name="bottomMargin">
+              <number>20</number>
+            </property>
+            <property name="spacing">
+              <number>12</number>
+            </property>
+            <item>
+              <widget class="QLabel" name="brandMark">
+                <property name="text">
+                  <string>invo.</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QLabel" name="brandCaption">
+                <property name="text">
+                  <string>INVOICE WORKSPACE</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QLabel" name="navSection">
+                <property name="text">
+                  <string>YOUR BUSINESS</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="libraryButton">
+                <property name="text">
+                  <string>Sales invoices</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="composeButton">
+                <property name="text">
+                  <string>Create invoice</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <spacer name="spacer52">
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint">
+                  <size>
+                    <width>20</width>
+                    <height>40</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+            <item>
+              <widget class="QLabel" name="offlineTitle">
+                <property name="text">
+                  <string>●  Stored on this device</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QLabel" name="offlineHint">
+                <property name="text">
+                  <string>Your drafts and exports
+stay on this computer.</string>
+                </property>
+                <property name="wordWrap">
+                  <bool>true</bool>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+      <item>
+        <widget class="QWidget" name="content">
+          <layout class="QVBoxLayout" name="contentLayout">
+            <property name="leftMargin">
+              <number>28</number>
+            </property>
+            <property name="rightMargin">
+              <number>28</number>
+            </property>
+            <property name="topMargin">
+              <number>28</number>
+            </property>
+            <property name="bottomMargin">
+              <number>28</number>
+            </property>
+            <property name="spacing">
+              <number>16</number>
+            </property>
+            <item>
+              <layout class="QHBoxLayout" name="headerLayout">
+                <item>
+                  <layout class="QVBoxLayout" name="headingLayout">
+                    <item>
+                      <widget class="QLabel" name="breadcrumb">
+                        <property name="text">
+                          <string>WORKSPACE  /  SALES</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QLabel" name="pageTitle">
+                        <property name="text">
+                          <string>Sales invoices</string>
+                        </property>
+                      </widget>
+                    </item>
+                  </layout>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="newButton">
+                    <property name="text">
+                      <string>+  New invoice</string>
+                    </property>
+                    <property name="maximumWidth">
+                      <number>180</number>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <widget class="QLabel" name="buildLabel">
+                <property name="text">
+                  <string>Draft workspace  ·  Documents are marked DRAFT until invoice issuance is available.</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QStackedWidget" name="pages">
+                <widget class="QWidget" name="libraryPage">
+                  <layout class="QVBoxLayout" name="libraryLayout">
+                    <property name="leftMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="spacing">
+                      <number>16</number>
+                    </property>
+                    <item>
+                      <layout class="QHBoxLayout" name="statsLayout">
+                        <item>
+                          <widget class="QFrame" name="countCard">
+                            <layout class="QVBoxLayout" name="countCardLayout">
+                              <property name="leftMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="rightMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="topMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="bottomMargin">
+                                <number>20</number>
+                              </property>
+                              <item>
+                                <widget class="QLabel" name="countCaption">
+                                  <property name="text">
+                                    <string>SAVED DRAFTS</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QLabel" name="countValue">
+                                  <property name="text">
+                                    <string>0</string>
+                                  </property>
+                                </widget>
+                              </item>
+                            </layout>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QFrame" name="valueCard">
+                            <layout class="QVBoxLayout" name="valueCardLayout">
+                              <property name="leftMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="rightMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="topMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="bottomMargin">
+                                <number>20</number>
+                              </property>
+                              <item>
+                                <widget class="QLabel" name="valueCaption">
+                                  <property name="text">
+                                    <string>DRAFT VALUE</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QLabel" name="valueValue">
+                                  <property name="text">
+                                    <string>INR 0.00</string>
+                                  </property>
+                                </widget>
+                              </item>
+                            </layout>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QFrame" name="rangeCard">
+                            <layout class="QVBoxLayout" name="rangeCardLayout">
+                              <property name="leftMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="rightMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="topMargin">
+                                <number>20</number>
+                              </property>
+                              <property name="bottomMargin">
+                                <number>20</number>
+                              </property>
+                              <item>
+                                <widget class="QLabel" name="rangeCaption">
+                                  <property name="text">
+                                    <string>SELECTED PERIOD</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QLabel" name="rangeValue">
+                                  <property name="text">
+                                    <string>—</string>
+                                  </property>
+                                </widget>
+                              </item>
+                            </layout>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
+                    <item>
+                      <widget class="QFrame" name="filterCard">
+                        <layout class="QVBoxLayout" name="filterLayout">
+                          <property name="leftMargin">
+                            <number>16</number>
+                          </property>
+                          <property name="rightMargin">
+                            <number>16</number>
+                          </property>
+                          <property name="topMargin">
+                            <number>16</number>
+                          </property>
+                          <property name="bottomMargin">
+                            <number>16</number>
+                          </property>
+                          <item>
+                            <layout class="QHBoxLayout" name="dateFilters">
+                              <item>
+                                <widget class="QWidget" name="searchField">
+                                  <layout class="QVBoxLayout" name="searchLayout">
+                                    <property name="leftMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="rightMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="topMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="bottomMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="spacing">
+                                      <number>5</number>
+                                    </property>
+                                    <item>
+                                      <widget class="QLabel" name="searchLabel">
+                                        <property name="text">
+                                          <string>Search customers or references</string>
+                                        </property>
+                                        <property name="buddy">
+                                          <cstring>search</cstring>
+                                        </property>
+                                      </widget>
+                                    </item>
+                                    <item>
+                                      <widget class="QLineEdit" name="search">
+                                        <property name="placeholderText">
+                                          <string>Search this date range…</string>
+                                        </property>
+                                        <property name="maxLength">
+                                          <number>200</number>
+                                        </property>
+                                      </widget>
+                                    </item>
+                                  </layout>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QWidget" name="startDateField">
+                                  <layout class="QVBoxLayout" name="startDateLayout">
+                                    <property name="leftMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="rightMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="topMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="bottomMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="spacing">
+                                      <number>5</number>
+                                    </property>
+                                    <item>
+                                      <widget class="QLabel" name="startDateLabel">
+                                        <property name="text">
+                                          <string>From</string>
+                                        </property>
+                                        <property name="buddy">
+                                          <cstring>startDate</cstring>
+                                        </property>
+                                      </widget>
+                                    </item>
+                                    <item>
+                                      <widget class="QDateEdit" name="startDate" />
+                                    </item>
+                                  </layout>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QWidget" name="endDateField">
+                                  <layout class="QVBoxLayout" name="endDateLayout">
+                                    <property name="leftMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="rightMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="topMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="bottomMargin">
+                                      <number>0</number>
+                                    </property>
+                                    <property name="spacing">
+                                      <number>5</number>
+                                    </property>
+                                    <item>
+                                      <widget class="QLabel" name="endDateLabel">
+                                        <property name="text">
+                                          <string>To</string>
+                                        </property>
+                                        <property name="buddy">
+                                          <cstring>endDate</cstring>
+                                        </property>
+                                      </widget>
+                                    </item>
+                                    <item>
+                                      <widget class="QDateEdit" name="endDate" />
+                                    </item>
+                                  </layout>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QPushButton" name="refreshButton">
+                                  <property name="text">
+                                    <string>Apply range</string>
+                                  </property>
+                                </widget>
+                              </item>
+                            </layout>
+                          </item>
+                          <item>
+                            <layout class="QHBoxLayout" name="rangeActions">
+                              <item>
+                                <widget class="QLabel" name="rangeHint">
+                                  <property name="text">
+                                    <string>ZIP includes every saved draft in the date range, regardless of search.</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QPushButton" name="bundleButton">
+                                  <property name="maximumWidth">
+                                    <number>210</number>
+                                  </property>
+                                  <property name="text">
+                                    <string>Export date range</string>
+                                  </property>
+                                </widget>
+                              </item>
+                            </layout>
+                          </item>
+                        </layout>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QTableWidget" name="draftsTable">
+                        <property name="minimumHeight">
+                          <number>200</number>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QLabel" name="emptyLabel">
+                        <property name="text">
+                          <string>No drafts yet. Create your first invoice to get started.</string>
+                        </property>
+                        <property name="alignment">
+                          <set>Qt::AlignCenter</set>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <layout class="QHBoxLayout" name="libraryActions">
+                        <item>
+                          <widget class="QLabel" name="resultsLabel">
+                            <property name="text">
+                              <string>0 drafts</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QPushButton" name="openButton">
+                            <property name="text">
+                              <string>Open selected draft</string>
+                            </property>
+                            <property name="maximumWidth">
+                              <number>210</number>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
+                  </layout>
+                </widget>
+                <widget class="QWidget" name="editorPage">
+                  <layout class="QVBoxLayout" name="editorLayout">
+                    <property name="leftMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="spacing">
+                      <number>12</number>
+                    </property>
+                    <item>
+                      <layout class="QHBoxLayout" name="editorActions">
+                        <item>
+                          <widget class="QPushButton" name="backButton">
+                            <property name="text">
+                              <string>←  Invoices</string>
+                            </property>
+                            <property name="maximumWidth">
+                              <number>130</number>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QLabel" name="identityLabel">
+                            <property name="text">
+                              <string>New draft • Not saved</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QPushButton" name="deleteButton">
+                            <property name="text">
+                              <string>Delete</string>
+                            </property>
+                            <property name="maximumWidth">
+                              <number>80</number>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QPushButton" name="previewButton">
+                            <property name="text">
+                              <string>Preview</string>
+                            </property>
+                            <property name="maximumWidth">
+                              <number>110</number>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QPushButton" name="exportButton">
+                            <property name="text">
+                              <string>Export ▾</string>
+                            </property>
+                            <property name="maximumWidth">
+                              <number>120</number>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QPushButton" name="saveButton">
+                            <property name="text">
+                              <string>Save draft</string>
+                            </property>
+                            <property name="maximumWidth">
+                              <number>150</number>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
+                    <item>
+                      <widget class="QTabWidget" name="editorTabs">
+                        <widget class="QWidget" name="detailsTab">
+                          <attribute name="title">
+                            <string>Details &amp;&amp; items</string>
+                          </attribute>
+                          <layout class="QVBoxLayout" name="detailTabLayout">
+                            <property name="leftMargin">
+                              <number>0</number>
+                            </property>
+                            <property name="rightMargin">
+                              <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                              <number>0</number>
+                            </property>
+                            <property name="bottomMargin">
+                              <number>0</number>
+                            </property>
+                            <item>
+                              <widget class="QScrollArea" name="editorScroll">
+                                <property name="widgetResizable">
+                                  <bool>true</bool>
+                                </property>
+                                <widget class="QWidget" name="editorBody">
+                                  <layout class="QVBoxLayout" name="bodyLayout">
+                                    <property name="leftMargin">
+                                      <number>20</number>
+                                    </property>
+                                    <property name="rightMargin">
+                                      <number>20</number>
+                                    </property>
+                                    <property name="topMargin">
+                                      <number>20</number>
+                                    </property>
+                                    <property name="bottomMargin">
+                                      <number>20</number>
+                                    </property>
+                                    <property name="spacing">
+                                      <number>18</number>
+                                    </property>
+                                    <item>
+                                      <layout class="QHBoxLayout" name="partiesLayout">
+                                        <item>
+                                          <widget class="QGroupBox" name="firmGroup">
+                                            <property name="title">
+                                              <string>From · Your firm</string>
+                                            </property>
+                                            <layout class="QVBoxLayout" name="firmLayout">
+                                              <property name="leftMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>10</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QWidget" name="firmNameField">
+                                                  <layout class="QVBoxLayout" name="firmNameLayout">
+                                                    <property name="leftMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="rightMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="topMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="bottomMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="spacing">
+                                                      <number>5</number>
+                                                    </property>
+                                                    <item>
+                                                      <widget class="QLabel" name="firmNameLabel">
+                                                        <property name="text">
+                                                          <string>Business / customer name *</string>
+                                                        </property>
+                                                        <property name="buddy">
+                                                          <cstring>firmName</cstring>
+                                                        </property>
+                                                      </widget>
+                                                    </item>
+                                                    <item>
+                                                      <widget class="QLineEdit" name="firmName">
+                                                        <property name="placeholderText">
+                                                          <string>Enter your firm name</string>
+                                                        </property>
+                                                        <property name="maxLength">
+                                                          <number>200</number>
+                                                        </property>
+                                                      </widget>
+                                                    </item>
+                                                  </layout>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <layout class="QHBoxLayout" name="firmTaxRow">
+                                                  <item>
+                                                    <widget class="QWidget" name="firmGstinField">
+                                                      <layout class="QVBoxLayout" name="firmGstinLayout">
+                                                        <property name="leftMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="spacing">
+                                                          <number>5</number>
+                                                        </property>
+                                                        <item>
+                                                          <widget class="QLabel" name="firmGstinLabel">
+                                                            <property name="text">
+                                                              <string>GSTIN</string>
+                                                            </property>
+                                                            <property name="buddy">
+                                                              <cstring>firmGstin</cstring>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                        <item>
+                                                          <widget class="QLineEdit" name="firmGstin">
+                                                            <property name="placeholderText">
+                                                              <string>Optional for this draft</string>
+                                                            </property>
+                                                            <property name="maxLength">
+                                                              <number>200</number>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                      </layout>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QWidget" name="firmStateField">
+                                                      <layout class="QVBoxLayout" name="firmStateLayout">
+                                                        <property name="leftMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="spacing">
+                                                          <number>5</number>
+                                                        </property>
+                                                        <item>
+                                                          <widget class="QLabel" name="firmStateLabel">
+                                                            <property name="text">
+                                                              <string>State / territory</string>
+                                                            </property>
+                                                            <property name="buddy">
+                                                              <cstring>firmState</cstring>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                        <item>
+                                                          <widget class="QLineEdit" name="firmState">
+                                                            <property name="placeholderText">
+                                                              <string>e.g. Gujarat</string>
+                                                            </property>
+                                                            <property name="maxLength">
+                                                              <number>200</number>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                      </layout>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </item>
+                                              <item>
+                                                <widget class="QPushButton" name="firmDetailsToggle">
+                                                  <property name="text">
+                                                    <string>Address and contact details  ▾</string>
+                                                  </property>
+                                                  <property name="checkable">
+                                                    <bool>true</bool>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QWidget" name="firmExtraDetails">
+                                                  <layout class="QVBoxLayout" name="firmExtraLayout">
+                                                    <property name="leftMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="rightMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="topMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="bottomMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <item>
+                                                      <widget class="QWidget" name="firmAddressField">
+                                                        <layout class="QVBoxLayout" name="firmAddressLayout">
+                                                          <property name="leftMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="rightMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="topMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="bottomMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="spacing">
+                                                            <number>5</number>
+                                                          </property>
+                                                          <item>
+                                                            <widget class="QLabel" name="firmAddressLabel">
+                                                              <property name="text">
+                                                                <string>Address</string>
+                                                              </property>
+                                                              <property name="buddy">
+                                                                <cstring>firmAddress</cstring>
+                                                              </property>
+                                                            </widget>
+                                                          </item>
+                                                          <item>
+                                                            <widget class="QPlainTextEdit" name="firmAddress">
+                                                              <property name="placeholderText">
+                                                                <string>Street, city and postal code</string>
+                                                              </property>
+                                                              <property name="maximumHeight">
+                                                                <number>66</number>
+                                                              </property>
+                                                            </widget>
+                                                          </item>
+                                                        </layout>
+                                                      </widget>
+                                                    </item>
+                                                    <item>
+                                                      <layout class="QHBoxLayout" name="firmContactRow">
+                                                        <item>
+                                                          <widget class="QWidget" name="firmEmailField">
+                                                            <layout class="QVBoxLayout" name="firmEmailLayout">
+                                                              <property name="leftMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="rightMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="topMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="bottomMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="spacing">
+                                                                <number>5</number>
+                                                              </property>
+                                                              <item>
+                                                                <widget class="QLabel" name="firmEmailLabel">
+                                                                  <property name="text">
+                                                                    <string>Email</string>
+                                                                  </property>
+                                                                  <property name="buddy">
+                                                                    <cstring>firmEmail</cstring>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                              <item>
+                                                                <widget class="QLineEdit" name="firmEmail">
+                                                                  <property name="placeholderText">
+                                                                    <string>name@example.com</string>
+                                                                  </property>
+                                                                  <property name="maxLength">
+                                                                    <number>200</number>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                            </layout>
+                                                          </widget>
+                                                        </item>
+                                                        <item>
+                                                          <widget class="QWidget" name="firmPhoneField">
+                                                            <layout class="QVBoxLayout" name="firmPhoneLayout">
+                                                              <property name="leftMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="rightMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="topMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="bottomMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="spacing">
+                                                                <number>5</number>
+                                                              </property>
+                                                              <item>
+                                                                <widget class="QLabel" name="firmPhoneLabel">
+                                                                  <property name="text">
+                                                                    <string>Phone</string>
+                                                                  </property>
+                                                                  <property name="buddy">
+                                                                    <cstring>firmPhone</cstring>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                              <item>
+                                                                <widget class="QLineEdit" name="firmPhone">
+                                                                  <property name="placeholderText">
+                                                                    <string>Contact number</string>
+                                                                  </property>
+                                                                  <property name="maxLength">
+                                                                    <number>200</number>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                            </layout>
+                                                          </widget>
+                                                        </item>
+                                                      </layout>
+                                                    </item>
+                                                  </layout>
+                                                </widget>
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QGroupBox" name="customerGroup">
+                                            <property name="title">
+                                              <string>Bill to · Customer</string>
+                                            </property>
+                                            <layout class="QVBoxLayout" name="customerLayout">
+                                              <property name="leftMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>16</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>10</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QWidget" name="customerNameField">
+                                                  <layout class="QVBoxLayout" name="customerNameLayout">
+                                                    <property name="leftMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="rightMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="topMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="bottomMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="spacing">
+                                                      <number>5</number>
+                                                    </property>
+                                                    <item>
+                                                      <widget class="QLabel" name="customerNameLabel">
+                                                        <property name="text">
+                                                          <string>Business / customer name *</string>
+                                                        </property>
+                                                        <property name="buddy">
+                                                          <cstring>customerName</cstring>
+                                                        </property>
+                                                      </widget>
+                                                    </item>
+                                                    <item>
+                                                      <widget class="QLineEdit" name="customerName">
+                                                        <property name="placeholderText">
+                                                          <string>Enter customer name</string>
+                                                        </property>
+                                                        <property name="maxLength">
+                                                          <number>200</number>
+                                                        </property>
+                                                      </widget>
+                                                    </item>
+                                                  </layout>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <layout class="QHBoxLayout" name="customerTaxRow">
+                                                  <item>
+                                                    <widget class="QWidget" name="customerGstinField">
+                                                      <layout class="QVBoxLayout" name="customerGstinLayout">
+                                                        <property name="leftMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="spacing">
+                                                          <number>5</number>
+                                                        </property>
+                                                        <item>
+                                                          <widget class="QLabel" name="customerGstinLabel">
+                                                            <property name="text">
+                                                              <string>GSTIN</string>
+                                                            </property>
+                                                            <property name="buddy">
+                                                              <cstring>customerGstin</cstring>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                        <item>
+                                                          <widget class="QLineEdit" name="customerGstin">
+                                                            <property name="placeholderText">
+                                                              <string>Optional for this draft</string>
+                                                            </property>
+                                                            <property name="maxLength">
+                                                              <number>200</number>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                      </layout>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QWidget" name="customerStateField">
+                                                      <layout class="QVBoxLayout" name="customerStateLayout">
+                                                        <property name="leftMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="rightMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="topMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="bottomMargin">
+                                                          <number>0</number>
+                                                        </property>
+                                                        <property name="spacing">
+                                                          <number>5</number>
+                                                        </property>
+                                                        <item>
+                                                          <widget class="QLabel" name="customerStateLabel">
+                                                            <property name="text">
+                                                              <string>State / territory</string>
+                                                            </property>
+                                                            <property name="buddy">
+                                                              <cstring>customerState</cstring>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                        <item>
+                                                          <widget class="QLineEdit" name="customerState">
+                                                            <property name="placeholderText">
+                                                              <string>e.g. Gujarat</string>
+                                                            </property>
+                                                            <property name="maxLength">
+                                                              <number>200</number>
+                                                            </property>
+                                                          </widget>
+                                                        </item>
+                                                      </layout>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </item>
+                                              <item>
+                                                <widget class="QPushButton" name="customerDetailsToggle">
+                                                  <property name="text">
+                                                    <string>Address and contact details  ▾</string>
+                                                  </property>
+                                                  <property name="checkable">
+                                                    <bool>true</bool>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QWidget" name="customerExtraDetails">
+                                                  <layout class="QVBoxLayout" name="customerExtraLayout">
+                                                    <property name="leftMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="rightMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="topMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <property name="bottomMargin">
+                                                      <number>0</number>
+                                                    </property>
+                                                    <item>
+                                                      <widget class="QWidget" name="customerAddressField">
+                                                        <layout class="QVBoxLayout" name="customerAddressLayout">
+                                                          <property name="leftMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="rightMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="topMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="bottomMargin">
+                                                            <number>0</number>
+                                                          </property>
+                                                          <property name="spacing">
+                                                            <number>5</number>
+                                                          </property>
+                                                          <item>
+                                                            <widget class="QLabel" name="customerAddressLabel">
+                                                              <property name="text">
+                                                                <string>Address</string>
+                                                              </property>
+                                                              <property name="buddy">
+                                                                <cstring>customerAddress</cstring>
+                                                              </property>
+                                                            </widget>
+                                                          </item>
+                                                          <item>
+                                                            <widget class="QPlainTextEdit" name="customerAddress">
+                                                              <property name="placeholderText">
+                                                                <string>Street, city and postal code</string>
+                                                              </property>
+                                                              <property name="maximumHeight">
+                                                                <number>66</number>
+                                                              </property>
+                                                            </widget>
+                                                          </item>
+                                                        </layout>
+                                                      </widget>
+                                                    </item>
+                                                    <item>
+                                                      <layout class="QHBoxLayout" name="customerContactRow">
+                                                        <item>
+                                                          <widget class="QWidget" name="customerEmailField">
+                                                            <layout class="QVBoxLayout" name="customerEmailLayout">
+                                                              <property name="leftMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="rightMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="topMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="bottomMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="spacing">
+                                                                <number>5</number>
+                                                              </property>
+                                                              <item>
+                                                                <widget class="QLabel" name="customerEmailLabel">
+                                                                  <property name="text">
+                                                                    <string>Email</string>
+                                                                  </property>
+                                                                  <property name="buddy">
+                                                                    <cstring>customerEmail</cstring>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                              <item>
+                                                                <widget class="QLineEdit" name="customerEmail">
+                                                                  <property name="placeholderText">
+                                                                    <string>name@example.com</string>
+                                                                  </property>
+                                                                  <property name="maxLength">
+                                                                    <number>200</number>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                            </layout>
+                                                          </widget>
+                                                        </item>
+                                                        <item>
+                                                          <widget class="QWidget" name="customerPhoneField">
+                                                            <layout class="QVBoxLayout" name="customerPhoneLayout">
+                                                              <property name="leftMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="rightMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="topMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="bottomMargin">
+                                                                <number>0</number>
+                                                              </property>
+                                                              <property name="spacing">
+                                                                <number>5</number>
+                                                              </property>
+                                                              <item>
+                                                                <widget class="QLabel" name="customerPhoneLabel">
+                                                                  <property name="text">
+                                                                    <string>Phone</string>
+                                                                  </property>
+                                                                  <property name="buddy">
+                                                                    <cstring>customerPhone</cstring>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                              <item>
+                                                                <widget class="QLineEdit" name="customerPhone">
+                                                                  <property name="placeholderText">
+                                                                    <string>Contact number</string>
+                                                                  </property>
+                                                                  <property name="maxLength">
+                                                                    <number>200</number>
+                                                                  </property>
+                                                                </widget>
+                                                              </item>
+                                                            </layout>
+                                                          </widget>
+                                                        </item>
+                                                      </layout>
+                                                    </item>
+                                                  </layout>
+                                                </widget>
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                      </layout>
+                                    </item>
+                                    <item>
+                                      <layout class="QHBoxLayout" name="metadataLayout">
+                                        <item>
+                                          <widget class="QWidget" name="invoiceDateField">
+                                            <layout class="QVBoxLayout" name="invoiceDateLayout">
+                                              <property name="leftMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>5</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QLabel" name="invoiceDateLabel">
+                                                  <property name="text">
+                                                    <string>Invoice date</string>
+                                                  </property>
+                                                  <property name="buddy">
+                                                    <cstring>invoiceDate</cstring>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QDateEdit" name="invoiceDate" />
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QWidget" name="referenceField">
+                                            <layout class="QVBoxLayout" name="referenceLayout">
+                                              <property name="leftMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>5</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QLabel" name="referenceLabel">
+                                                  <property name="text">
+                                                    <string>Reference / PO</string>
+                                                  </property>
+                                                  <property name="buddy">
+                                                    <cstring>reference</cstring>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QLineEdit" name="reference">
+                                                  <property name="placeholderText">
+                                                    <string>Optional reference</string>
+                                                  </property>
+                                                  <property name="maxLength">
+                                                    <number>200</number>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QWidget" name="placeOfSupplyField">
+                                            <layout class="QVBoxLayout" name="placeOfSupplyLayout">
+                                              <property name="leftMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>5</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QLabel" name="placeOfSupplyLabel">
+                                                  <property name="text">
+                                                    <string>Place of supply</string>
+                                                  </property>
+                                                  <property name="buddy">
+                                                    <cstring>placeOfSupply</cstring>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QLineEdit" name="placeOfSupply">
+                                                  <property name="placeholderText">
+                                                    <string>State / territory</string>
+                                                  </property>
+                                                  <property name="maxLength">
+                                                    <number>200</number>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QWidget" name="taxModeField">
+                                            <layout class="QVBoxLayout" name="taxModeLayout">
+                                              <property name="leftMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>5</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QLabel" name="taxModeLabel">
+                                                  <property name="text">
+                                                    <string>Draft tax split *</string>
+                                                  </property>
+                                                  <property name="buddy">
+                                                    <cstring>taxMode</cstring>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QComboBox" name="taxMode" />
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                      </layout>
+                                    </item>
+                                    <item>
+                                      <layout class="QHBoxLayout" name="secondaryMetadata">
+                                        <item>
+                                          <widget class="QWidget" name="templateField">
+                                            <layout class="QVBoxLayout" name="templateLayout">
+                                              <property name="leftMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="spacing">
+                                                <number>5</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QLabel" name="templateLabel">
+                                                  <property name="text">
+                                                    <string>Document style</string>
+                                                  </property>
+                                                  <property name="buddy">
+                                                    <cstring>template</cstring>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QComboBox" name="template" />
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QWidget" name="dueField">
+                                            <layout class="QVBoxLayout" name="dueLayout">
+                                              <property name="leftMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>0</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QCheckBox" name="dueEnabled">
+                                                  <property name="text">
+                                                    <string>Payment due date</string>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QDateEdit" name="dueDate" />
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                      </layout>
+                                    </item>
+                                    <item>
+                                      <widget class="QLabel" name="itemsHeading">
+                                        <property name="text">
+                                          <string>Invoice items</string>
+                                        </property>
+                                      </widget>
+                                    </item>
+                                    <item>
+                                      <widget class="QTableWidget" name="itemsTable">
+                                        <property name="minimumHeight">
+                                          <number>190</number>
+                                        </property>
+                                        <property name="maximumHeight">
+                                          <number>300</number>
+                                        </property>
+                                      </widget>
+                                    </item>
+                                    <item>
+                                      <layout class="QHBoxLayout" name="itemActions">
+                                        <item>
+                                          <widget class="QPushButton" name="addItemButton">
+                                            <property name="text">
+                                              <string>+  Add item</string>
+                                            </property>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QPushButton" name="removeItemButton">
+                                            <property name="text">
+                                              <string>Remove selected item</string>
+                                            </property>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QLabel" name="calculationHint">
+                                            <property name="text">
+                                              <string>Totals update as you type</string>
+                                            </property>
+                                          </widget>
+                                        </item>
+                                        <item>
+                                          <widget class="QPushButton" name="calculateButton">
+                                            <property name="text">
+                                              <string>Recalculate</string>
+                                            </property>
+                                          </widget>
+                                        </item>
+                                      </layout>
+                                    </item>
+                                    <item>
+                                      <layout class="QHBoxLayout" name="invoiceBottom">
+                                        <item>
+                                          <layout class="QVBoxLayout" name="notesLayout">
+                                            <item>
+                                              <widget class="QWidget" name="notesField">
+                                                <layout class="QVBoxLayout" name="notesLayout">
+                                                  <property name="leftMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="rightMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="topMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="bottomMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="spacing">
+                                                    <number>5</number>
+                                                  </property>
+                                                  <item>
+                                                    <widget class="QLabel" name="notesLabel">
+                                                      <property name="text">
+                                                        <string>Notes</string>
+                                                      </property>
+                                                      <property name="buddy">
+                                                        <cstring>notes</cstring>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QPlainTextEdit" name="notes">
+                                                      <property name="placeholderText">
+                                                        <string>A note for your customer</string>
+                                                      </property>
+                                                      <property name="maximumHeight">
+                                                        <number>90</number>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </widget>
+                                            </item>
+                                            <item>
+                                              <widget class="QWidget" name="termsField">
+                                                <layout class="QVBoxLayout" name="termsLayout">
+                                                  <property name="leftMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="rightMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="topMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="bottomMargin">
+                                                    <number>0</number>
+                                                  </property>
+                                                  <property name="spacing">
+                                                    <number>5</number>
+                                                  </property>
+                                                  <item>
+                                                    <widget class="QLabel" name="termsLabel">
+                                                      <property name="text">
+                                                        <string>Terms &amp; payment details</string>
+                                                      </property>
+                                                      <property name="buddy">
+                                                        <cstring>terms</cstring>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QPlainTextEdit" name="terms">
+                                                      <property name="placeholderText">
+                                                        <string>Payment instructions, bank details or terms</string>
+                                                      </property>
+                                                      <property name="maximumHeight">
+                                                        <number>90</number>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </widget>
+                                            </item>
+                                          </layout>
+                                        </item>
+                                        <item>
+                                          <widget class="QFrame" name="summaryCard">
+                                            <property name="minimumWidth">
+                                              <number>320</number>
+                                            </property>
+                                            <layout class="QVBoxLayout" name="summaryLayout">
+                                              <property name="leftMargin">
+                                                <number>20</number>
+                                              </property>
+                                              <property name="rightMargin">
+                                                <number>20</number>
+                                              </property>
+                                              <property name="topMargin">
+                                                <number>20</number>
+                                              </property>
+                                              <property name="bottomMargin">
+                                                <number>20</number>
+                                              </property>
+                                              <item>
+                                                <widget class="QLabel" name="summaryHeading">
+                                                  <property name="text">
+                                                    <string>AMOUNT SUMMARY</string>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <layout class="QHBoxLayout" name="taxableRow">
+                                                  <item>
+                                                    <widget class="QLabel" name="taxableCaption">
+                                                      <property name="text">
+                                                        <string>Taxable amount</string>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QLabel" name="taxableAmount">
+                                                      <property name="text">
+                                                        <string>—</string>
+                                                      </property>
+                                                      <property name="alignment">
+                                                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </item>
+                                              <item>
+                                                <layout class="QHBoxLayout" name="cgstRow">
+                                                  <item>
+                                                    <widget class="QLabel" name="cgstCaption">
+                                                      <property name="text">
+                                                        <string>CGST</string>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QLabel" name="cgstAmount">
+                                                      <property name="text">
+                                                        <string>—</string>
+                                                      </property>
+                                                      <property name="alignment">
+                                                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </item>
+                                              <item>
+                                                <layout class="QHBoxLayout" name="sgstRow">
+                                                  <item>
+                                                    <widget class="QLabel" name="sgstCaption">
+                                                      <property name="text">
+                                                        <string>SGST</string>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QLabel" name="sgstAmount">
+                                                      <property name="text">
+                                                        <string>—</string>
+                                                      </property>
+                                                      <property name="alignment">
+                                                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </item>
+                                              <item>
+                                                <layout class="QHBoxLayout" name="igstRow">
+                                                  <item>
+                                                    <widget class="QLabel" name="igstCaption">
+                                                      <property name="text">
+                                                        <string>IGST</string>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                  <item>
+                                                    <widget class="QLabel" name="igstAmount">
+                                                      <property name="text">
+                                                        <string>—</string>
+                                                      </property>
+                                                      <property name="alignment">
+                                                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                                                      </property>
+                                                    </widget>
+                                                  </item>
+                                                </layout>
+                                              </item>
+                                              <item>
+                                                <widget class="QLabel" name="totalCaption">
+                                                  <property name="text">
+                                                    <string>TOTAL AMOUNT</string>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QLabel" name="totalLabel">
+                                                  <property name="text">
+                                                    <string>—</string>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                              <item>
+                                                <widget class="QLabel" name="wordsLabel">
+                                                  <property name="text">
+                                                    <string>Add your details and an item to calculate.</string>
+                                                  </property>
+                                                  <property name="wordWrap">
+                                                    <bool>true</bool>
+                                                  </property>
+                                                </widget>
+                                              </item>
+                                            </layout>
+                                          </widget>
+                                        </item>
+                                      </layout>
+                                    </item>
+                                  </layout>
+                                </widget>
+                              </widget>
+                            </item>
+                          </layout>
+                        </widget>
+                        <widget class="QWidget" name="previewTab">
+                          <attribute name="title">
+                            <string>Document preview</string>
+                          </attribute>
+                          <layout class="QVBoxLayout" name="previewLayout">
+                            <property name="leftMargin">
+                              <number>16</number>
+                            </property>
+                            <item>
+                              <layout class="QHBoxLayout" name="previewActions">
+                                <item>
+                                  <widget class="QPushButton" name="refreshPreviewButton">
+                                    <property name="text">
+                                      <string>Refresh preview</string>
+                                    </property>
+                                    <property name="maximumWidth">
+                                      <number>180</number>
+                                    </property>
+                                  </widget>
+                                </item>
+                                <item>
+                                  <widget class="QComboBox" name="previewZoom">
+                                    <property name="maximumWidth">
+                                      <number>150</number>
+                                    </property>
+                                  </widget>
+                                </item>
+                              </layout>
+                            </item>
+                            <property name="rightMargin">
+                              <number>16</number>
+                            </property>
+                            <property name="topMargin">
+                              <number>16</number>
+                            </property>
+                            <property name="bottomMargin">
+                              <number>16</number>
+                            </property>
+                            <item>
+                              <widget class="QLabel" name="previewHint">
+                                <property name="text">
+                                  <string>Preview the current form using the actual PDF renderer. No save is required.</string>
+                                </property>
+                              </widget>
+                            </item>
+                            <item>
+                              <widget class="QWidget" name="pdfContainer">
+                                <layout class="QVBoxLayout" name="pdfLayout" />
+                              </widget>
+                            </item>
+                          </layout>
+                        </widget>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QFrame" name="stickySummary">
+                        <layout class="QHBoxLayout" name="stickyLayout">
+                          <item>
+                            <widget class="QLabel" name="stickyHint">
+                              <property name="text">
+                                <string>Automatic calculations • All amounts in INR</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item>
+                            <widget class="QLabel" name="stickyTotal">
+                              <property name="text">
+                                <string>Total  —</string>
+                              </property>
+                              <property name="alignment">
+                                <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                              </property>
+                            </widget>
+                          </item>
+                        </layout>
+                      </widget>
+                    </item>
+                  </layout>
+                </widget>
+              </widget>
+            </item>
+            <item>
+              <layout class="QHBoxLayout" name="footerLayout">
+                <item>
+                  <widget class="QLabel" name="statusLabel">
+                    <property name="text">
+                      <string>Ready</string>
+                    </property>
+                    <property name="wordWrap">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="revealButton">
+                    <property name="text">
+                      <string>Show latest export</string>
+                    </property>
+                    <property name="maximumWidth">
+                      <number>210</number>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+          </layout>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <resources />
+  <connections />
 </ui>

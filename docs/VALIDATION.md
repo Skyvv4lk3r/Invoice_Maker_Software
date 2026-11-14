@@ -1,32 +1,40 @@
-# Validation performed on 8 November 2026
+# Validation performed on 14 November 2026
 
-The delivered source was checked in a Linux development environment with Python
-3.12.14. These results describe this starter, not a production accounting release.
+The expanded draft workspace was checked locally on Linux with Python 3.12.14.
+These results describe a draft application, not a production accounting release.
 
 | Check | Observed result |
 | --- | --- |
-| Domain, integration and architecture tests | 29 passed |
-| Qt desktop save-and-PDF workflow | 1 passed using Qt's offscreen platform |
+| Domain, integration and architecture tests | 39 passed |
+| Qt desktop workflow tests | 5 passed using Qt's offscreen platform |
 | Import-linter contracts | 5 kept, 0 broken |
 | Ruff lint and formatting | Passed |
-| Python wheel build | Passed; Qt `.ui` form and Alembic migration included |
-| Desktop visual review | Saved draft, totals, date-filtered list and export action visible |
-| Draft PDF visual review | A4 layout, calculated amounts and DRAFT labels readable |
-| Multipage PDF case | Export of 80 items with XML-sensitive text completed |
+| Python wheel/source distribution | Built successfully using isolated build dependencies |
+| Desktop visual review | List, editor, collapsible details, persistent total and actual PDF preview reviewed |
+| Draft PDF visual review | A4, embedded Latin fonts, parties, item amounts, tax summary and DRAFT labels reviewed |
+| Word visual review | Fictional sample rendered through LibreOffice and inspected; no clipped tables or text |
+| Multipage PDF case | 80 items including XML-sensitive text exported successfully |
+| Backward compatibility | Payloads without the new fields decode without data replacement |
 | Git whitespace check | Passed |
 
-Representative scenarios cover half-paise component rounding, Indian amount words,
-invalid/non-finite decimal input, fiscal-year boundary derivation, reopening data
-through a second backend, conflicting revisions, rollback, tombstones, audit count,
-inclusive date ranges, stale PDF requests, storage failure and backend execution
-without importing Qt.
+New tests exercise extended-field persistence, per-line totals, malformed fields,
+old JSON payloads, PDF preview without saving, Word content/revision conflicts,
+inclusive package boundaries, deleted-row exclusion, CSV formula escaping,
+consistent Word/register totals and revision manifests. Desktop tests cover
+automatic totals, PDF preview, Word export, search, save/cancel/discard navigation,
+stale-total removal and date-range export unaffected by search text.
 
-Windows and Python 3.13 checks are configured in `.github/workflows/ci.yml` but have
-not been run on GitHub before publication. Windows installer behaviour, complete
-GST compliance, issued numbering, Word templates, bulk export and encrypted
-recovery are not implemented or validated in this milestone.
+The earlier 8 November starter passed its five GitHub Actions jobs. The new branch's
+Windows/Linux and Python 3.12/3.13 results are reported by its own Actions run; local
+Linux checks do not substitute for those results.
 
-The dependency bounds in `pyproject.toml` are compatibility ranges, not a full
-reproducible lock. Once Windows CI passes, select and maintain a tested release
-lock for distribution. The local run used SQLAlchemy 2.1.8, Alembic 1.20.1,
-ReportLab 5.1.0 and PySide6 6.12.0.
+Not validated as production features: GST classification, registered GSTIN status,
+GSTIN checksum, issued numbering, financial-year counter reset, immutable issued
+invoices, special GST treatments, reusable master profiles, GST return submission,
+XLSX exports, published template versions, full Indian-script rendering, encrypted
+recovery and Windows installer behavior. Word was inspected through LibreOffice;
+Microsoft Word pagination still needs review. ZIP generation currently runs in
+memory and has not been benchmarked for large accounting datasets.
+
+Dependencies are bounded compatibility ranges, not a full release lock. A tested
+Windows dependency lock and installer remain necessary before distribution.
