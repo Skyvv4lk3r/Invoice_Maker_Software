@@ -7,6 +7,7 @@ from invoice_generator.application.contracts.dto import (
     DraftInput,
     DraftReference,
     DraftSummary,
+    ExportReceipt,
     Result,
     SaveDraftRequest,
     TotalsDTO,
@@ -32,3 +33,11 @@ class IDraftPdfCommands(Protocol):
 
 class IArtifactActions(Protocol):
     def reveal(self, artifact_id: str) -> Result[bool]: ...
+
+
+class IDraftPreviewQueries(Protocol):
+    def preview(self, data: DraftInput) -> Result[bytes]: ...
+
+
+class IDateRangeExportCommands(Protocol):
+    def export_range(self, dates: DateRange) -> Result[ExportReceipt]: ...

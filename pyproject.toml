@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "invoice-generator-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Offline invoice desktop application with an independent Python backend"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -13,6 +13,7 @@ dependencies = [
   "alembic>=1.13,<2",
   "platformdirs>=4,<5",
   "reportlab>=4,<6",
+  "python-docx>=1.2,<2",
 ]
 
 [project.optional-dependencies]
@@ -27,7 +28,7 @@ invoice-generator = "invoice_generator.bootstrap:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"invoice_generator.presentation.qt" = ["forms/*.ui"]
+"invoice_generator.presentation.qt" = ["forms/*.ui", "styles/*.qss"]
 "invoice_generator.infrastructure.persistence" = ["migrations/*.mako"]
 
 [tool.ruff]
@@ -53,26 +54,26 @@ include_external_packages = true
 name = "Presentation talks only to public application contracts"
 type = "forbidden"
 source_modules = ["invoice_generator.presentation"]
-forbidden_modules = ["invoice_generator.domain", "invoice_generator.application.handlers", "invoice_generator.application.ports", "invoice_generator.infrastructure", "sqlalchemy", "reportlab", "alembic"]
+forbidden_modules = ["invoice_generator.domain", "invoice_generator.application.handlers", "invoice_generator.application.ports", "invoice_generator.infrastructure", "sqlalchemy", "reportlab", "docx", "alembic"]
 allow_indirect_imports = false
 
 [[tool.importlinter.contracts]]
 name = "Domain is independent"
 type = "forbidden"
 source_modules = ["invoice_generator.domain"]
-forbidden_modules = ["invoice_generator.application", "invoice_generator.presentation", "invoice_generator.infrastructure", "PySide6", "sqlalchemy", "reportlab"]
+forbidden_modules = ["invoice_generator.application", "invoice_generator.presentation", "invoice_generator.infrastructure", "PySide6", "sqlalchemy", "reportlab", "docx"]
 
 [[tool.importlinter.contracts]]
 name = "Public contracts contain values and protocols only"
 type = "forbidden"
 source_modules = ["invoice_generator.application.contracts"]
-forbidden_modules = ["invoice_generator.domain", "invoice_generator.infrastructure", "invoice_generator.presentation", "invoice_generator.application.handlers", "PySide6", "sqlalchemy", "reportlab"]
+forbidden_modules = ["invoice_generator.domain", "invoice_generator.infrastructure", "invoice_generator.presentation", "invoice_generator.application.handlers", "PySide6", "sqlalchemy", "reportlab", "docx"]
 
 [[tool.importlinter.contracts]]
 name = "Use cases depend on ports, never adapters"
 type = "forbidden"
 source_modules = ["invoice_generator.application.handlers", "invoice_generator.application.ports"]
-forbidden_modules = ["invoice_generator.infrastructure", "invoice_generator.presentation", "PySide6", "sqlalchemy", "reportlab"]
+forbidden_modules = ["invoice_generator.infrastructure", "invoice_generator.presentation", "PySide6", "sqlalchemy", "reportlab", "docx"]
 
 [[tool.importlinter.contracts]]
 name = "Adapters never import screens or concrete handlers"

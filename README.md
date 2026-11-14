@@ -3,22 +3,27 @@
 An offline desktop application for an Indian firm's sales invoices, built with
 **PySide6, a separate Python backend, and SQLite**.
 
-**Status: milestone 1 — a working draft workflow.** This repository is a starter
-implementation of the agreed architecture, not the completed GST invoice product.
-It does not issue legal invoices or allocate invoice numbers yet. Every generated
-PDF is marked **DRAFT**. See [the roadmap](docs/ROADMAP.md) for the remaining work.
+**Status: an expanded draft workspace.** The application now has a separate sales
+list and invoice editor, automatic totals, PDF preview, Word export and a date-range
+review package. Numbered GST issuance is still a later milestone. All documents
+remain clearly marked **DRAFT**.
 
 ## What works now
 
-- Open the desktop application and enter multiple draft items.
-- Choose an explicit draft tax split and enter rates; calculate with `Decimal`.
-- Convert the final rounded amount to Indian-numbering words.
-- Save, reload, update and soft-delete drafts in a local SQLite database.
-- Reject stale updates using a revision number; record save/delete audit events.
-- Find drafts using inclusive start and end dates.
-- Generate a paginated draft PDF with escaped user-entered text.
-- Run the same backend without importing Qt.
-- Check package boundaries automatically with import-linter.
+- A styled desktop workspace with search, date filters, draft counts and totals.
+- Separate invoice editor with unsaved-change protection and keyboard shortcuts.
+- Firm/customer addresses, GSTIN, state, email and phone captured with each draft.
+- Goods/services, HSN/SAC, units, references, optional due dates, notes and payment terms.
+- Automatic Decimal totals, per-line totals and INR amount in Indian-numbering words.
+- CGST + SGST or IGST chosen explicitly by the operator; rates are draft inputs.
+- Save, reopen, update and soft-delete drafts with revision checks and audit history.
+- Actual PDF preview without saving, plus PDF and editable Word (.docx) export.
+- Two built-in document colour styles: Modern and Classic.
+- One-click date-range ZIP with all matching saved drafts: PDFs, Word copies,
+  invoice and line CSV registers, and a captured-revision manifest.
+- Separate backend that runs without Qt; five enforced dependency boundaries.
+
+![Invoice editor](docs/screenshots/editor.png)
 
 ## Windows setup
 
@@ -52,17 +57,35 @@ Repeated demo runs create separate drafts. The `data` directory is ignored by Gi
 
 ## Using the draft workspace
 
-1. Enter firm/customer names and an invoice date.
-2. Select a draft tax split and add descriptions, quantities, prices and tax rates.
-3. Choose **Calculate** or **Save draft**; saving always recalculates in the backend.
-4. Double-click a saved draft to reopen it. Use **Save + draft PDF** to export.
-5. Choose **Show generated PDF in folder** to locate the exported document.
+1. Open **New invoice**. Enter firm/customer names and choose a draft tax split.
+2. Expand **Address and contact details** when needed. Add item descriptions,
+   quantities, prices, rates, types, HSN/SAC and units. Totals update as you type.
+3. Add references, notes or payment details; choose Modern or Classic appearance.
+4. Use **Preview** to render the current form without saving. The viewer supports
+   whole-page and page-width views. Editing clears the previous preview.
+5. Choose **Save draft** (`Ctrl+S`) or **Export → Save & export PDF / Word**.
+   **Show latest export** opens the file location for manual sharing.
+6. Return to **Sales invoices** to search and reopen drafts. Apply an inclusive
+   date range and choose **Export date range** for all saved drafts in that range.
+   Search text only filters the screen; it does not restrict the ZIP package.
 
-Rates and the split are manually supplied draft inputs. This version does not
-determine GST applicability, place of supply, exemptions or special treatments.
-The draft calculation policy rounds each line's taxable amount and each tax
-component to paise using `ROUND_HALF_UP`; totals sum those displayed components.
-Production policy and examples must be agreed before issuance is implemented.
+The ZIP is a **draft review package, not a GST return or portal import file**.
+Unsaved edits and deleted drafts are excluded. Export does not email anyone.
+CSV amounts are INR and text that could become a spreadsheet formula is escaped.
+
+GSTIN validation checks structure only, not registration or checksum. HSN/SAC,
+state and place of supply are entered facts, not verified classification. Rates
+and tax split remain manually supplied; exemptions, reverse charge, exports,
+UTGST, cess and other special treatments are not implemented.
+
+The calculation policy rounds each line's taxable amount and each tax component
+to paise using `ROUND_HALF_UP`; totals sum those displayed components. Production
+policy and examples must be agreed before issuance is implemented.
+
+New fields are added to the existing draft payload with backward-compatible
+reader defaults; old databases remain readable without replacing their tables.
+A new draft keeps the current firm details for the session. A persistent master
+customer/firm catalogue is still planned.
 
 ## Where the files belong
 
@@ -73,14 +96,15 @@ Production policy and examples must be agreed before issuance is implemented.
 | `src/invoice_generator/application/handlers/` | Use cases and orchestration |
 | `src/invoice_generator/application/ports/` | Storage, rendering and file-operation interfaces |
 | `src/invoice_generator/domain/` | Pure calculations and business values |
-| `src/invoice_generator/infrastructure/` | SQLAlchemy, Alembic, ReportLab and filesystem adapters |
+| `src/invoice_generator/infrastructure/` | SQLAlchemy, Alembic, PDF/Word/ZIP renderers and filesystem adapters |
 | `src/invoice_generator/bootstrap.py` | Constructs concrete implementations and injects them |
 | `tests/` | Domain, storage, export, architecture and GUI checks |
 | `docs/` | Decisions, requirements, template plan and implementation milestones |
 | `.github/` | CI workflow, issue/PR templates and dependency-update configuration |
 | `scripts/` | Windows setup and portable quality checks |
 
-The editable Qt Designer form is
+The application theme is `src/invoice_generator/presentation/qt/styles/workspace.qss`.
+Invoice document styles are separate from this theme. The editable Qt Designer form is
 `src/invoice_generator/presentation/qt/forms/main_window.ui`. Open it with
 `.\.venv\Scripts\pyside6-designer.exe`. Runtime loading means there is no generated
 UI Python file to edit or regenerate.
@@ -133,7 +157,7 @@ server is needed and how future adapters can be added without changing the UI.
 
 The included [41-page UML specification](docs/design/UML_System_Design.pdf) and
 [offline diagram gallery](docs/design/gallery.html) describe the **target** architecture.
-This starter implements its draft slice. Durable issued-document jobs, immutable
+This implementation covers an expanded draft workflow. Durable issued-document jobs, immutable
 issued snapshots, template publication and annual issuance counters are explicitly
 future work; this repository does not pretend to implement those contracts yet.
 

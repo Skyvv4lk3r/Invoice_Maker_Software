@@ -10,9 +10,20 @@
 - [x] Inclusive date queries and draft PDF export
 - [x] Tests, CI definitions and Windows setup instructions
 
+## 1b. Expanded draft workspace — included
+
+- [x] Separate list/editor, search, summary cards and application theme
+- [x] Firm/customer detail capture, GSTIN format checks, goods/services and HSN/SAC fields
+- [x] Due dates, references, units, notes and payment terms
+- [x] Debounced automatic totals, line amounts and stale-result protection
+- [x] Unsaved-change guards on navigation and close
+- [x] Actual PDF preview and Word draft export with Modern/Classic colour styles
+- [x] Inclusive date-range ZIP, invoice/line CSVs and captured-revision manifest
+- [x] Old draft payload compatibility and regression coverage
+
 ## 2. Complete sales facts and safe issuance
 
-- [ ] Firm/customer profiles, addresses, GSTIN, goods/services, HSN/SAC, units
+- [ ] Reusable firm/customer/item master profiles (per-draft fields are implemented)
 - [ ] Place of supply and explicitly supported GST treatments
 - [ ] Agreed discount, rounding and financial-year/closed-period policies
 - [ ] Transactional numeric-only counters scoped by firm, FY and document kind
@@ -23,19 +34,23 @@
 
 ## 3. Documents and templates
 
-- [ ] Paired PDF and DOCX templates, assets, required-field schema and branding
-- [ ] Draft/candidate preview with real document renderers
+- [ ] Versioned PDF/DOCX template bundles, assets, required-field schema and branding
+  (built-in draft renderers and two colour styles are implemented)
+- [x] Current draft preview using the real PDF renderer
+- [ ] Candidate-template publication preview and approval evidence
 - [ ] Validate, visually review, publish, activate and retire template versions
 - [ ] Historical template/branding preservation and artifact registry
 - [ ] Durable rendering jobs, retries, progress and failure recovery
 
 ## 4. Accountant workflow
 
-- [ ] Search, paged browsing and all-matching date-range selection
-- [ ] Capture a stable export manifest across every result page
-- [ ] Excel/CSV invoice/line/GST registers and a complete ZIP package
+- [x] Search and all-matching date-range draft selection
+- [ ] Paged browsing for large datasets and issued-invoice selection
+- [x] Capture one snapshot of all matching draft rows and revisions in a ZIP manifest
+- [x] Draft invoice/line CSV registers and ZIP with PDF/Word copies
+- [ ] XLSX and GST filing-specific issued-invoice registers
 - [ ] Separate cancellation and credit/debit-note registers
-- [ ] Manual file handoff with an honest distinction from delivery confirmation
+- [x] Manual export-folder handoff; no delivery claim
 
 ## 5. Operational release
 

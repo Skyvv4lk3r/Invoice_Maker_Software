@@ -18,7 +18,7 @@ number and financial-year reset requirements when implementing issuance.
 
 ## Current milestone
 
-Only draft operations and draft PDF generation exist. Do not introduce a button
+Draft operations, PDF/Word export, PDF preview and date-range draft packages exist. Do not introduce a button
 that implies legal issuance until the issuance transaction, required fields,
 financial-year uniqueness and tested GST treatment policy are implemented together.
 Never remove draft watermarks to simulate a finished invoice feature.

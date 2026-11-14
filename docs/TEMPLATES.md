@@ -1,27 +1,27 @@
-# Screens and invoice templates
+# Screens and invoice documents
 
 These are separate design surfaces:
 
-| Surface | Current file/tool | Future responsibilities |
+| Surface | Current implementation | Remaining work |
 | --- | --- | --- |
-| Desktop screens | Qt Designer `.ui` form | Navigation, forms, tables, accessibility and themes |
-| Draft PDF | ReportLab renderer | A4 layout, fonts, logo, pagination and approved sections |
-| Word invoice | Not implemented | docxtpl template with field placeholders and repeated item rows |
-| Template catalogue | Not implemented | Versions, validation evidence, publication and retirement |
+| Desktop screens | Qt Designer form and a packaged QSS application theme | Accessibility and larger-data usability testing |
+| Draft PDF | ReportLab, A4, embedded bundled Latin fonts, repeated table headers | Indian-script fonts/shaping, logo and production sections |
+| Word draft | python-docx, A4, editable fields and repeated table header | Published docxtpl bundles and Microsoft Word layout QA |
+| Document styles | Modern/Classic palettes saved with each draft | User-designed, versioned and validated templates |
+| Preview | Actual PDF bytes shown through Qt PDF, without saving | Candidate-template publication previews |
+| Template catalogue | Not implemented | Versions, assets, branding snapshots, publication and retirement |
 
-The draft PDF receives a neutral `DraftPdfModel` with already calculated totals
-and amount in words. Template code must never perform financial formulas or change
-invoice facts. XML metacharacters in user text are escaped before ReportLab sees
-them. The first PDF layout uses built-in Latin fonts; full Indian-script shaping
-and embedded fonts are a later template milestone.
+The renderers receive a neutral `DraftPdfModel` shared by both document formats,
+with already calculated amounts. They do not perform financial formulas or change
+invoice facts. ReportLab text is escaped. PDF fonts are embedded from ReportLab's
+bundled Vera font files; this is not full Indian-script support.
 
-The target design freezes a `TemplateVersion`, `BrandingSnapshot` and renderer
-version in each issued document's `RenderBinding`. Changing the default template
-or logo affects future invoices. Existing documents remain accessible with their
-original appearance. The current draft renderer has not yet implemented this
-catalogue; it is deliberately a single draft-only adapter.
+Modern and Classic are built-in colour variants of the same draft layout. They do
+not represent the versioned template catalogue in the target UML. Future issued
+documents must freeze template, branding and renderer versions so later changes do
+not silently alter historical documents.
 
-PDF and Word must match invoice facts. Their pagination is not assumed identical.
-Word template publication needs visual review in the intended viewer, because
-generating a DOCX file does not prove its page layout. Do not add arbitrary
-executable template uploads or hide required fields through appearance settings.
+PDF and Word match invoice facts; their pagination need not match. Word copies are
+editable, and later manual edits do not change the database. A fictional sample was
+rendered through LibreOffice for visual review; exact Microsoft Word pagination
+still needs validation. Both formats retain explicit DRAFT labels.

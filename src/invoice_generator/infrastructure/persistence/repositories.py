@@ -18,6 +18,7 @@ from invoice_generator.domain.models import (
     DraftLine,
     InvoiceTotals,
     LineTotals,
+    Party,
     TaxMode,
 )
 from invoice_generator.infrastructure.persistence.models import AuditRecord, DraftRecord
@@ -37,11 +38,16 @@ def decode(payload: str) -> DraftInvoice:
             Decimal(row["quantity"]),
             Decimal(row["unit_price"]),
             Decimal(row["gst_rate"]),
+            row.get("item_type", "GOODS"),
+            row.get("hsn_sac", ""),
+            row.get("unit", "Nos"),
         )
         for row in data["lines"]
     )
     data["invoice_date"] = date.fromisoformat(data["invoice_date"])
     data["tax_mode"] = TaxMode(data["tax_mode"])
+    for field in ("firm_details", "customer_details"):
+        data[field] = Party(**data.get(field, {}))
     return DraftInvoice(**data, totals=InvoiceTotals(**totals))
 
 

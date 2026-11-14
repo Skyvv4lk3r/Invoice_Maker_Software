@@ -13,6 +13,8 @@ from invoice_generator.application.contracts.dto import (
     DraftReference,
     DraftSummary,
     LineInput,
+    LineTotalsDTO,
+    PartyDetails,
     Result,
     SaveDraftRequest,
     TotalsDTO,
@@ -28,6 +30,7 @@ from invoice_generator.domain.models import (
     DraftInvoice,
     DraftLine,
     InvoiceTotals,
+    Party,
     TaxMode,
     ValidationError,
 )
@@ -82,7 +85,7 @@ def _decimal(raw: str, field: str) -> Decimal:
 
 def to_totals(totals: InvoiceTotals) -> TotalsDTO:
     values = asdict(totals)
-    values.pop("lines")
+    values["lines"] = tuple(LineTotalsDTO(**line) for line in values["lines"])
     return TotalsDTO(**values)
 
 
@@ -97,41 +100,103 @@ def to_dto(draft: DraftInvoice) -> DraftDTO:
             draft.tax_mode.value,
             tuple(
                 LineInput(
-                    row.description, str(row.quantity), str(row.unit_price), str(row.gst_rate)
+                    row.description,
+                    str(row.quantity),
+                    str(row.unit_price),
+                    str(row.gst_rate),
+                    row.item_type,
+                    row.hsn_sac,
+                    row.unit,
                 )
                 for row in draft.lines
             ),
+            PartyDetails(**asdict(draft.firm_details)),
+            PartyDetails(**asdict(draft.customer_details)),
+            draft.place_of_supply,
+            draft.reference,
+            draft.due_date,
+            draft.notes,
+            draft.terms,
+            draft.template_id,
         ),
         to_totals(draft.totals),
     )
 
 
+def _text(raw: str, field: str, maximum: int) -> str:
+    value = raw.strip()
+    if len(value) > maximum or any(
+        (ord(ch) < 32 and ch not in "\n\r\t")
+        or 0xD800 <= ord(ch) <= 0xDFFF
+        or ord(ch) in (0xFFFE, 0xFFFF)
+        for ch in value
+    ):
+        raise ValidationError(field, f"Use readable text up to {maximum} characters.")
+    return value
+
+
+def _party(details: PartyDetails, field: str) -> Party:
+    gstin = _text(details.gstin, f"{field}.gstin", 15).upper()
+    if gstin and not re.fullmatch(r"\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]", gstin):
+        raise ValidationError(f"{field}.gstin", "Enter a 15-character GSTIN or leave it blank.")
+    return Party(
+        _text(details.address, f"{field}.address", 1000),
+        gstin,
+        _text(details.state, f"{field}.state", 100),
+        _text(details.email, f"{field}.email", 200),
+        _text(details.phone, f"{field}.phone", 40),
+    )
+
+
+def _line(line: LineInput, index: int) -> DraftLine:
+    prefix = f"lines.{index}"
+    if line.item_type not in ("GOODS", "SERVICES"):
+        raise ValidationError(f"{prefix}.item_type", "Choose Goods or Services.")
+    code = line.hsn_sac.strip()
+    if code and not re.fullmatch(r"\d{2,8}", code):
+        raise ValidationError(f"{prefix}.hsn_sac", "Use 2 to 8 digits or leave the code blank.")
+    return DraftLine(
+        _text(line.description, f"{prefix}.description", 500),
+        _decimal(line.quantity, f"{prefix}.quantity"),
+        _decimal(line.unit_price, f"{prefix}.unit_price"),
+        _decimal(line.gst_rate, f"{prefix}.gst_rate"),
+        line.item_type,
+        code,
+        _text(line.unit, f"{prefix}.unit", 20),
+    )
+
+
 def build_draft(data: DraftInput, draft_id: str, revision: int) -> DraftInvoice:
     for field, text in [("firm_name", data.firm_name), ("customer_name", data.customer_name)]:
-        if not 1 <= len(text.strip()) <= 200:
+        if not 1 <= len(_text(text, field, 200)) <= 200:
             raise ValidationError(field, "Use between 1 and 200 characters.")
     try:
         mode = TaxMode(data.tax_mode)
     except ValueError as error:
         raise ValidationError("tax_mode", "Choose CGST_SGST or IGST explicitly.") from error
-    lines = tuple(
-        DraftLine(
-            line.description.strip(),
-            _decimal(line.quantity, f"lines.{index}.quantity"),
-            _decimal(line.unit_price, f"lines.{index}.unit_price"),
-            _decimal(line.gst_rate, f"lines.{index}.gst_rate"),
-        )
-        for index, line in enumerate(data.lines, 1)
-    )
+    lines = tuple(_line(line, index) for index, line in enumerate(data.lines, 1))
+    invoice_date = parse_date(data.invoice_date)
+    if data.due_date and parse_date(data.due_date, "due_date") < invoice_date:
+        raise ValidationError("due_date", "Due date cannot be before the invoice date.")
+    if data.template_id not in ("modern", "classic"):
+        raise ValidationError("template_id", "Choose Modern or Classic.")
     return DraftInvoice(
         draft_id,
         revision,
         data.firm_name.strip(),
         data.customer_name.strip(),
-        parse_date(data.invoice_date),
+        invoice_date,
         mode,
         lines,
         calculate(lines, mode),
+        _party(data.firm_details, "firm_details"),
+        _party(data.customer_details, "customer_details"),
+        _text(data.place_of_supply, "place_of_supply", 100),
+        _text(data.reference, "reference", 100),
+        data.due_date,
+        _text(data.notes, "notes", 3000),
+        _text(data.terms, "terms", 2000),
+        data.template_id,
     )
 
 
@@ -180,6 +245,8 @@ class DraftService:
                         x.invoice_date.isoformat(),
                         x.customer_name,
                         x.totals.total_paise,
+                        x.firm_name,
+                        x.reference,
                     )
                     for x in uow.drafts.list(start, end)
                 )

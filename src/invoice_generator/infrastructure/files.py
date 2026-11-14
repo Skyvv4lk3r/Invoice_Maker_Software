@@ -14,8 +14,13 @@ class LocalArtifactStore:
         self._directory.mkdir(parents=True, exist_ok=True)
 
     def publish_pdf(self, data: bytes) -> ArtifactDTO:
+        return self.publish(data, "pdf")
+
+    def publish(self, data: bytes, extension: str) -> ArtifactDTO:
+        if extension not in ("pdf", "docx", "zip"):
+            raise ValueError("Unsupported export format.")
         artifact_id = str(uuid4())
-        path = self._directory / f"draft-{artifact_id}.pdf"
+        path = self._directory / f"draft-{artifact_id}.{extension}"
         temporary = path.with_suffix(".tmp")
         try:
             with temporary.open("xb") as file:
@@ -28,8 +33,12 @@ class LocalArtifactStore:
         return ArtifactDTO(artifact_id, path.name)
 
     def reveal(self, artifact_id: str) -> None:
-        path = self._directory / f"draft-{UUID(artifact_id)}.pdf"
-        if not path.is_file():
+        paths = [
+            self._directory / f"draft-{UUID(artifact_id)}.{extension}"
+            for extension in ("pdf", "docx", "zip")
+        ]
+        path = next((candidate for candidate in paths if candidate.is_file()), None)
+        if path is None:
             raise MissingError
         if sys.platform == "win32":
             subprocess.Popen(["explorer.exe", "/select,", str(path)])
