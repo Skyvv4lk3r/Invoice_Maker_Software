@@ -36,6 +36,18 @@ class DraftLine:
     quantity: Decimal
     unit_price: Decimal
     gst_rate: Decimal
+    item_type: str = "GOODS"
+    hsn_sac: str = ""
+    unit: str = "Nos"
+
+
+@dataclass(frozen=True)
+class Party:
+    address: str = ""
+    gstin: str = ""
+    state: str = ""
+    email: str = ""
+    phone: str = ""
 
 
 @dataclass(frozen=True)
@@ -68,3 +80,11 @@ class DraftInvoice:
     tax_mode: TaxMode
     lines: tuple[DraftLine, ...]
     totals: InvoiceTotals
+    firm_details: Party = Party()
+    customer_details: Party = Party()
+    place_of_supply: str = ""
+    reference: str = ""
+    due_date: str = ""
+    notes: str = ""
+    terms: str = ""
+    template_id: str = "modern"

@@ -22,7 +22,9 @@ def create_database(path: Path):
 
     @event.listens_for(engine, "begin")
     def begin(connection):
-        connection.exec_driver_sql("BEGIN")
+        connection.exec_driver_sql(
+            "BEGIN IMMEDIATE" if connection.get_execution_options().get("immediate") else "BEGIN"
+        )
 
     config = Config()
     location = str(Path(__file__).parent / "migrations")

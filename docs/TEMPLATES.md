@@ -1,27 +1,37 @@
-# Screens and invoice templates
+# Invoice layouts
 
-These are separate design surfaces:
+The application theme and invoice documents are separate. Qt QSS changes the
+application's screens; an InvoiceLayout changes the PDF and Word output.
 
-| Surface | Current file/tool | Future responsibilities |
-| --- | --- | --- |
-| Desktop screens | Qt Designer `.ui` form | Navigation, forms, tables, accessibility and themes |
-| Draft PDF | ReportLab renderer | A4 layout, fonts, logo, pagination and approved sections |
-| Word invoice | Not implemented | docxtpl template with field placeholders and repeated item rows |
-| Template catalogue | Not implemented | Versions, validation evidence, publication and retirement |
+In **Invoice designer**, start with Modern or Classic. Choose **Save as new** to
+create a named template. Built-ins are immutable. Further changes use **Save new
+version** with optimistic version checking. Firm settings select the default.
 
-The draft PDF receives a neutral `DraftPdfModel` with already calculated totals
-and amount in words. Template code must never perform financial formulas or change
-invoice facts. XML metacharacters in user text are escaped before ReportLab sees
-them. The first PDF layout uses built-in Latin fonts; full Indian-script shaping
-and embedded fonts are a later template milestone.
+| Setting | Supported values |
+| --- | --- |
+| Logo | PNG/JPEG input, up to 2 MB and 4000×4000; re-encoded as PNG, at most 800×250 |
+| Colours | Six-digit accent and alternate-row tint |
+| Font | Sans serif, serif or monospace |
+| Body size / margin | 8–12 pt setting, 10–25 mm margins |
+| Header | Left, centre or right alignment |
+| Parties | Side by side or stacked |
+| Rows | 4–12 spacing setting |
+| Columns | Reorder item, quantity/unit, price, GST rate, taxable amount, line total |
+| Sections | Reorder parties, details, items, totals, notes and terms; totals follow items |
+| Optional display | Notes, payment terms, signature area and footer message |
 
-The target design freezes a `TemplateVersion`, `BrandingSnapshot` and renderer
-version in each issued document's `RenderBinding`. Changing the default template
-or logo affects future invoices. Existing documents remain accessible with their
-original appearance. The current draft renderer has not yet implemented this
-catalogue; it is deliberately a single draft-only adapter.
+Required facts cannot be removed. Issued documents always include the signatory
+area. The preview renders a real PDF from the current invoice or fictional sample
+data. Layout JSON import/export makes designs reusable. It is a declarative file
+format, not executable code; arbitrary Word/PDF template import and a free-form
+page canvas are not implemented.
 
-PDF and Word must match invoice facts. Their pagination is not assumed identical.
-Word template publication needs visual review in the intended viewer, because
-generating a DOCX file does not prove its page layout. Do not add arbitrary
-executable template uploads or hide required fields through appearance settings.
+Issued invoices capture the full layout/logo; later template updates do not alter
+stored facts. Drafts use the newest version. PDF and Word use the same financial
+facts, but pagination differs. Font support is currently Latin text; Indian scripts
+need appropriate fonts and shaping. Exact Microsoft Word rendering has not been
+validated; a sample was rendered and checked using LibreOffice.
+
+PDF sans uses bundled embedded Vera fonts; serif/mono use standard PDF fonts.
+Renderer code and font binaries are not archived per invoice. Preserve original
+PDF exports when byte-identical historical documents are required.

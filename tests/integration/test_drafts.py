@@ -13,6 +13,7 @@ def test_save_reopen_update_and_conflict(backend, sample):
     assert first.revision == 1
     assert first.totals.total_paise == 23600
     second_client = build_backend(backend.directory)
+    second_client.auth.login("test-owner", "test-password-1234")
     try:
         loaded = second_client.queries.get(first.id).value
         updated = second_client.commands.save(
@@ -39,7 +40,7 @@ def test_dates_are_inclusive_and_deletion_is_audited(backend, sample):
     assert len(backend.queries.list(DateRange("2026-04-01", "2026-04-30")).value) == 1
     with backend._engine.connect() as connection:
         assert connection.scalar(select(func.count()).select_from(DraftRecord)) == 4
-        assert connection.scalar(select(func.count()).select_from(AuditRecord)) == 5
+        assert connection.scalar(select(func.count()).select_from(AuditRecord)) == 6
 
 
 def test_invalid_date_range_returns_typed_error(backend):
@@ -58,7 +59,7 @@ def test_write_and_audit_roll_back_together(backend, sample):
         # Abandon before commit to simulate a failing later step.
     assert backend.queries.get(draft.id).error.code == "NOT_FOUND"
     with backend._engine.connect() as connection:
-        assert connection.scalar(select(func.count()).select_from(AuditRecord)) == 0
+        assert connection.scalar(select(func.count()).select_from(AuditRecord)) == 1
 
 
 def test_deleted_draft_cannot_be_resurrected_by_stale_save(backend, sample):

@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from invoice_generator.application.contracts.layout import InvoiceLayout
+
 
 @dataclass(frozen=True)
 class ApplicationError:
@@ -27,6 +29,18 @@ class LineInput:
     quantity: str
     unit_price: str
     gst_rate: str
+    item_type: str = "GOODS"
+    hsn_sac: str = ""
+    unit: str = "Nos"
+
+
+@dataclass(frozen=True)
+class PartyDetails:
+    address: str = ""
+    gstin: str = ""
+    state: str = ""
+    email: str = ""
+    phone: str = ""
 
 
 @dataclass(frozen=True)
@@ -36,6 +50,23 @@ class DraftInput:
     invoice_date: str
     tax_mode: str
     lines: tuple[LineInput, ...]
+    firm_details: PartyDetails = PartyDetails()
+    customer_details: PartyDetails = PartyDetails()
+    place_of_supply: str = ""
+    reference: str = ""
+    due_date: str = ""
+    notes: str = ""
+    terms: str = ""
+    template_id: str = "modern"
+
+
+@dataclass(frozen=True)
+class LineTotalsDTO:
+    taxable_paise: int
+    cgst_paise: int
+    sgst_paise: int
+    igst_paise: int
+    total_paise: int
 
 
 @dataclass(frozen=True)
@@ -46,6 +77,7 @@ class TotalsDTO:
     igst_paise: int
     total_paise: int
     amount_in_words: str
+    lines: tuple[LineTotalsDTO, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -82,6 +114,8 @@ class DraftSummary:
     invoice_date: str
     customer_name: str
     total_paise: int
+    firm_name: str = ""
+    reference: str = ""
 
 
 @dataclass(frozen=True)
@@ -98,6 +132,12 @@ class PdfLine:
     gst_rate: str
     taxable_paise: int
     total_paise: int
+    item_type: str = "GOODS"
+    hsn_sac: str = ""
+    unit: str = "Nos"
+    cgst_paise: int = 0
+    sgst_paise: int = 0
+    igst_paise: int = 0
 
 
 @dataclass(frozen=True)
@@ -110,3 +150,22 @@ class DraftPdfModel:
     tax_mode: str
     lines: tuple[PdfLine, ...]
     totals: TotalsDTO
+    firm_details: PartyDetails = PartyDetails()
+    customer_details: PartyDetails = PartyDetails()
+    place_of_supply: str = ""
+    reference: str = ""
+    due_date: str = ""
+    notes: str = ""
+    terms: str = ""
+    template_id: str = "modern"
+    layout: InvoiceLayout | None = None
+    invoice_number: int | None = None
+    status: str = "DRAFT"
+    signatory: str = ""
+    shipping_address: str = ""
+
+
+@dataclass(frozen=True)
+class ExportReceipt:
+    artifact: ArtifactDTO
+    invoice_count: int
