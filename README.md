@@ -1,165 +1,163 @@
 # Invoice Generator
 
-An offline desktop application for an Indian firm's sales invoices, built with
-**PySide6, a separate Python backend, and SQLite**.
+An offline Windows desktop workspace for an Indian firm's sales invoices. The
+frontend is PySide6; a separate Python application layer handles records,
+calculations and documents; SQLite stores the workspace locally.
 
-**Status: an expanded draft workspace.** The application now has a separate sales
-list and invoice editor, automatic totals, PDF preview, Word export and a date-range
-review package. Numbered GST issuance is still a later milestone. All documents
-remain clearly marked **DRAFT**.
+**Version 0.3: owner authentication, custom invoice layouts and a controlled
+issuance workflow.** This is a testable application build, with the supported GST
+scope described below. It is not a GST portal client or a complete accounting suite.
 
-## What works now
+![Sales workspace](docs/screenshots/workspace.png)
 
-- A styled desktop workspace with search, date filters, draft counts and totals.
-- Separate invoice editor with unsaved-change protection and keyboard shortcuts.
-- Firm/customer addresses, GSTIN, state, email and phone captured with each draft.
-- Goods/services, HSN/SAC, units, references, optional due dates, notes and payment terms.
-- Automatic Decimal totals, per-line totals and INR amount in Indian-numbering words.
-- CGST + SGST or IGST chosen explicitly by the operator; rates are draft inputs.
-- Save, reopen, update and soft-delete drafts with revision checks and audit history.
-- Actual PDF preview without saving, plus PDF and editable Word (.docx) export.
-- Two built-in document colour styles: Modern and Classic.
-- One-click date-range ZIP with all matching saved drafts: PDFs, Word copies,
-  invoice and line CSV registers, and a captured-revision manifest.
-- Separate backend that runs without Qt; five enforced dependency boundaries.
+## Included
 
-![Invoice editor](docs/screenshots/editor.png)
+- First-run firm setup and owner sign-in, Argon2id password hashing, recovery codes,
+  password changes, failed-login throttling, and a 15-minute inactivity lock.
+- Persistent firm details, GSTIN, bank details, authorised signatory and invoice defaults.
+- Customer and goods/services catalogues, with search, revision checks and deletion.
+- Invoice editor with automatic Decimal totals, Indian amount-in-words, draft
+  save/update/delete, unsaved-change protection, and actual PDF preview.
+- A layout designer: logo, colours, fonts, margins, row spacing, header alignment,
+  side-by-side/stacked parties, reorderable columns/sections, notes, terms and footer.
+  Save named versions and import/export layout JSON files.
+- Issued invoices receive simple numbers: **1, 2, 3…**. Each April–March financial
+  year has its own counter; the displayed invoice number contains no year prefix.
+  Number allocation, snapshot, audit and pending-render record commit together.
+- Issued records retain the captured firm, item, tax and layout facts. They are
+  read-only; cancellation keeps the original number and records the reason.
+- PDF and editable Word exports. Date-range ZIP packages contain PDF/Word copies,
+  invoice and line-item CSV registers and a manifest. Draft and issued exports are
+  separate; cancelled records are labelled in issued registers.
+- Password-encrypted complete workspace backups, checksum/integrity verification,
+  and restore into a separate empty folder. Audit history is available in the UI.
+- Five enforced dependency boundaries; backend operation does not import Qt.
 
-## Windows setup
+![Layout designer](docs/screenshots/designer.png)
 
-Install **64-bit Python 3.12** and Git. In PowerShell, clone the repository:
+## Start on Windows
+
+Install 64-bit Python 3.12 and Git, then use PowerShell:
 
 ```powershell
 git clone https://github.com/Skyvv4lk3r/Invoice_Maker_Software.git
 cd Invoice_Maker_Software
-```
-
-From the repository directory, create the environment and start the application:
-
-```powershell
+git switch feat/firm-security-templates
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -e ".[desktop,dev,gui-test]"
 .\.venv\Scripts\python.exe -m invoice_generator
 ```
 
-Activation is optional. Calling the virtual environment's Python directly avoids
-PowerShell activation-policy issues. Alternatively run `scripts/setup.ps1`.
+For an existing clone, fetch and switch to this feature branch, then repeat the
+install command. Activation is optional; directly calling the environment's Python
+avoids PowerShell activation-policy issues. The branch is a reviewable development
+build; it has not been merged or published as a release.
 
-For a backend-only demonstration:
+A Windows portable build is also produced by the desktop GitHub Actions job. When
+the job succeeds, download **InvoiceGenerator-Windows-portable** from its artifacts,
+extract the complete folder and run `InvoiceGenerator.exe`. Keep `_internal` beside
+the executable. These unsigned test builds are retained for 14 days. A signed
+installer and automatic updates are still future work.
 
-```powershell
-.\.venv\Scripts\python.exe -m invoice_generator --demo --data-dir .\data\demo
-```
+## First use
 
-This creates fictional sample data and a draft PDF, then prints the PDF location.
-Repeated demo runs create separate drafts. The `data` directory is ignored by Git.
+1. Create your owner account and save the one-time recovery code somewhere safe.
+   No default password exists. Changing/resetting the password rotates the code.
+2. Open **Firm settings**. Save the legal firm details, GSTIN, signatory, bank
+   details and terms. Draft-only mode is the default.
+3. Open **Invoice designer**. Customize a built-in layout and **Save as new**.
+   Set it as the default in Firm settings. Existing issued invoices retain theirs.
+4. Add customers and items to the catalogues, then create an invoice. Preview,
+   save and export a draft, or finalize it after the issuance checks pass.
+5. In **Sales invoices**, select Drafts or Issued invoices, apply start/end dates,
+   and export the range. Search filters the screen, not the package. **Show latest
+   export** opens the folder so you can share the files through your normal apps.
+6. Create an encrypted backup under **Backups**. Restore always makes a separate
+   copy; restart and use **Open another workspace folder** on the sign-in screen
+   to open it. Sign in with the credentials contained in that backup.
 
-## Using the draft workspace
+The application does not send messages, upload records or file returns. CSV text
+that could become a spreadsheet formula is escaped. Word copies are editable;
+manual edits to a Word file do not update the stored invoice.
 
-1. Open **New invoice**. Enter firm/customer names and choose a draft tax split.
-2. Expand **Address and contact details** when needed. Add item descriptions,
-   quantities, prices, rates, types, HSN/SAC and units. Totals update as you type.
-3. Add references, notes or payment details; choose Modern or Classic appearance.
-4. Use **Preview** to render the current form without saving. The viewer supports
-   whole-page and page-width views. Editing clears the previous preview.
-5. Choose **Save draft** (`Ctrl+S`) or **Export → Save & export PDF / Word**.
-   **Show latest export** opens the file location for manual sharing.
-6. Return to **Sales invoices** to search and reopen drafts. Apply an inclusive
-   date range and choose **Export date range** for all saved drafts in that range.
-   Search text only filters the screen; it does not restrict the ZIP package.
+## Issuance scope and limitations
 
-The ZIP is a **draft review package, not a GST return or portal import file**.
-Unsaved edits and deleted drafts are excluded. Export does not email anyone.
-CSV amounts are INR and text that could become a spreadsheet formula is escaped.
+Issuance requires the owner to confirm the firm's applicability in settings.
+**IRN-required mode and unreviewed mode block final issuance.** The implemented
+workflow is domestic ordinary taxable INR sales using CGST+SGST or IGST. It checks
+required details, GSTIN structure/checksum, supplier-state consistency, place of
+supply versus tax split, HSN/SAC shape, positive tax rate and signatory. It does
+not verify registration status, classification or rates against government data.
 
-GSTIN validation checks structure only, not registration or checksum. HSN/SAC,
-state and place of supply are entered facts, not verified classification. Rates
-and tax split remain manually supplied; exemptions, reverse charge, exports,
-UTGST, cess and other special treatments are not implemented.
+Unsupported: e-invoice/IRN generation, GST filing, reverse charge, SEZ, exports,
+UTGST intraterritory supplies, cess, exempt/nil-rated supplies, credit/debit notes,
+purchase invoices, payments ledger, discounts and opening-number import.
+**Use this numbering series only for a new series beginning at 1 for each financial
+year.** It does not import an existing firm's prior invoice numbers. Do not use a
+restored old backup as a second issuing workspace: reconcile its counter with
+records issued since the backup before resuming. There is no multi-device sync.
 
-The calculation policy rounds each line's taxable amount and each tax component
-to paise using `ROUND_HALF_UP`; totals sum those displayed components. Production
-policy and examples must be agreed before issuance is implemented.
+The operator must validate tax treatment with the accountant and sign documents
+where required. A local cancellation is not a GST portal cancellation or a credit
+note. The accountant ZIP is a register, not a portal-compatible return upload.
 
-New fields are added to the existing draft payload with backward-compatible
-reader defaults; old databases remain readable without replacing their tables.
-A new draft keeps the current firm details for the session. A persistent master
-customer/firm catalogue is still planned.
+Calculation rounds each line's taxable amount and each tax component to paise
+with `ROUND_HALF_UP`, then sums the displayed components. This policy is tested;
+coverage of a policy is not a certification of every business's tax treatment.
 
-## Where the files belong
+## Data and security
 
-| Path | Responsibility |
-| --- | --- |
-| `src/invoice_generator/presentation/` | Qt views, task bridge and presentation state |
-| `src/invoice_generator/application/contracts/` | Public immutable DTOs and narrow interfaces |
-| `src/invoice_generator/application/handlers/` | Use cases and orchestration |
-| `src/invoice_generator/application/ports/` | Storage, rendering and file-operation interfaces |
-| `src/invoice_generator/domain/` | Pure calculations and business values |
-| `src/invoice_generator/infrastructure/` | SQLAlchemy, Alembic, PDF/Word/ZIP renderers and filesystem adapters |
-| `src/invoice_generator/bootstrap.py` | Constructs concrete implementations and injects them |
-| `tests/` | Domain, storage, export, architecture and GUI checks |
-| `docs/` | Decisions, requirements, template plan and implementation milestones |
-| `.github/` | CI workflow, issue/PR templates and dependency-update configuration |
-| `scripts/` | Windows setup and portable quality checks |
+On Windows the default folder is normally `%LOCALAPPDATA%\InvoiceGenerator`, with
+`invoices.db` and `exports/`. Override it with `--data-dir PATH` or
+`INVOICE_GENERATOR_DATA_DIR`. Alembic upgrades existing draft databases in place;
+first startup then asks you to create the workspace owner.
 
-The application theme is `src/invoice_generator/presentation/qt/styles/workspace.qss`.
-Invoice document styles are separate from this theme. The editable Qt Designer form is
-`src/invoice_generator/presentation/qt/forms/main_window.ui`. Open it with
-`.\.venv\Scripts\pyside6-designer.exe`. Runtime loading means there is no generated
-UI Python file to edit or regenerate.
+Owner authentication controls application access. **The live database and exported
+files are not encrypted.** Someone with filesystem access can read or modify them;
+use an appropriate OS account and disk encryption. Backups use a separate
+passphrase and authenticated encryption. Lost password plus lost recovery code
+cannot be recovered through the app. See [security](SECURITY.md).
 
-## Local data
+Backups are bounded to 128 MB of uncompressed records/exports and 9,999 stored
+files. Exports run in memory and are intended for modest single-workstation data.
+Larger installations need streaming export and a different concurrency design.
 
-Normal startup uses the platform's per-user application-data directory. On Windows,
-this is normally `%LOCALAPPDATA%\InvoiceGenerator`. It contains `invoices.db` and
-an `exports` folder. Pass `--data-dir PATH` or set `INVOICE_GENERATOR_DATA_DIR` to
-choose another local directory. Nothing is uploaded by the application.
-
-Do not commit databases, customer records, invoice exports or credentials. SQLite
-and draft exports are not encrypted by this starter. Encrypted full backups and
-controlled restore are planned. Use fictional data while developing.
-
-## Checks
+## Development and checks
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\check.py
-```
-
-This runs formatting, linting, dependency-boundary checks and backend tests. To
-also test the GUI:
-
-```powershell
 $env:QT_QPA_PLATFORM = "offscreen"
 .\.venv\Scripts\python.exe -m pytest tests\gui
+.\.venv\Scripts\python.exe -m build
 ```
 
-GitHub Actions is configured to test the backend on Windows and Linux with Python
-3.12/3.13, plus a Windows GUI job. These remote jobs run after the repository is
-pushed; a workflow file alone does not mean a GitHub run has passed.
+Build the portable application on Windows:
 
-Build a Python wheel with `python -m build`. A Windows `.exe`/installer is a later
-packaging milestone. Source installs currently require Python.
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[desktop,packaging]"
+.\.venv\Scripts\python.exe scripts\build_desktop.py
+```
 
-## GitHub development
+GitHub Actions runs backend checks on Windows/Linux with Python 3.12/3.13 and GUI
+checks plus packaging on Windows. For a disposable backend demonstration, use
+`python -m invoice_generator --demo --data-dir PATH_TO_NEW_EMPTY_FOLDER`; it creates
+a fictional draft under a random demo account and rejects configured workspaces.
 
-The repository is [Skyvv4lk3r/Invoice_Maker_Software](https://github.com/Skyvv4lk3r/Invoice_Maker_Software).
-Use feature branches and pull requests for subsequent changes. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for the checks to run before submitting a change.
-Authenticate with your normal GitHub sign-in workflow; never put a token into source files.
+| Path | Responsibility |
+| --- | --- |
+| `presentation/` | Qt screens, form values and worker bridge |
+| `application/contracts/` | Immutable values and narrow public Protocols |
+| `application/handlers/` | Authentication and invoice/workspace use cases |
+| `application/ports/` | Persistence, rendering, identity and asset interfaces |
+| `domain/` | Money calculations, GST checks and fiscal-year rules |
+| `infrastructure/` | SQLite/Alembic, documents, hashing, images and backups |
+| `bootstrap.py` | Concrete adapter construction and dependency injection |
 
-## Architecture and scope
-
-Read [architecture](docs/ARCHITECTURE.md), [requirements](docs/REQUIREMENTS.md),
-[template design](docs/TEMPLATES.md), [roadmap](docs/ROADMAP.md), and
-[contribution instructions](CONTRIBUTING.md). These explain why no Django or web
-server is needed and how future adapters can be added without changing the UI.
-
-The included [41-page UML specification](docs/design/UML_System_Design.pdf) and
-[offline diagram gallery](docs/design/gallery.html) describe the **target** architecture.
-This implementation covers an expanded draft workflow. Durable issued-document jobs, immutable
-issued snapshots, template publication and annual issuance counters are explicitly
-future work; this repository does not pretend to implement those contracts yet.
-
-No open-source licence has been selected. Choose a licence before distributing the
-project as open source. Third-party dependencies retain their own licence terms.
+These paths sit under `src/invoice_generator`. UI styling is separate from invoice
+layout settings. Read [architecture](docs/ARCHITECTURE.md),
+[templates](docs/TEMPLATES.md), [roadmap](docs/ROADMAP.md),
+[validation](docs/VALIDATION.md) and [contributing](CONTRIBUTING.md).
+The original [UML specification](docs/design/UML_System_Design.pdf) remains the
+broader target design; the architecture document identifies what this build implements.
+No open-source licence has been selected.

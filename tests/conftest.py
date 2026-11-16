@@ -18,5 +18,8 @@ def sample():
 @pytest.fixture
 def backend(tmp_path):
     app = build_backend(tmp_path / "app-data")
+    from invoice_generator.application.contracts.workspace import OwnerSetup
+
+    app.auth.setup(OwnerSetup("Demo Firm", "test-owner", "test-password-1234"))
     yield app
     app.close()

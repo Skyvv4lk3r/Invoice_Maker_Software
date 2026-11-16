@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from invoice_generator.application.contracts.layout import InvoiceLayout
+
 
 @dataclass(frozen=True)
 class ApplicationError:
@@ -156,6 +158,11 @@ class DraftPdfModel:
     notes: str = ""
     terms: str = ""
     template_id: str = "modern"
+    layout: InvoiceLayout | None = None
+    invoice_number: int | None = None
+    status: str = "DRAFT"
+    signatory: str = ""
+    shipping_address: str = ""
 
 
 @dataclass(frozen=True)

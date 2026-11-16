@@ -1,4 +1,4 @@
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from uuid import uuid4
 
 from invoice_generator.application.contracts.dto import (
@@ -73,9 +73,17 @@ class DraftPdfService:
         renderer: IDraftPdfRenderer,
         store: IArtifactStore,
         extension: str = "pdf",
+        templates=None,
     ):
         self._uow_factory, self._renderer, self._store = uow_factory, renderer, store
         self._extension = extension
+        self._templates = templates
+
+    def _model(self, draft):
+        model = document_model(draft)
+        if self._templates is not None:
+            model = replace(model, layout=self._templates.get(draft.template_id).layout)
+        return model
 
     def export(self, request: DraftReference) -> Result[ArtifactDTO]:
         def operation():
@@ -83,7 +91,7 @@ class DraftPdfService:
                 draft = uow.drafts.get(parse_id(request.id))
                 if draft.revision != request.expected_revision:
                     raise ConflictError
-            data = self._renderer.render(document_model(draft))
+            data = self._renderer.render(self._model(draft))
             if self._extension == "pdf":
                 return self._store.publish_pdf(data)
             return self._store.publish(data, self._extension)
@@ -92,7 +100,7 @@ class DraftPdfService:
 
     def preview(self, data: DraftInput) -> Result[bytes]:
         return safe_result(
-            lambda: self._renderer.render(document_model(build_draft(data, str(uuid4()), 0)))
+            lambda: self._renderer.render(self._model(build_draft(data, str(uuid4()), 0)))
         )
 
     def reveal(self, artifact_id: str) -> Result[bool]:
@@ -105,9 +113,14 @@ class DraftPdfService:
 
 class DateRangeExportService:
     def __init__(
-        self, uow_factory: UnitOfWorkFactory, renderer: IDraftBundleRenderer, store: IArtifactStore
+        self,
+        uow_factory: UnitOfWorkFactory,
+        renderer: IDraftBundleRenderer,
+        store: IArtifactStore,
+        templates=None,
     ):
         self._uow_factory, self._renderer, self._store = uow_factory, renderer, store
+        self._templates = templates
 
     def export_range(self, dates: DateRange) -> Result[ExportReceipt]:
         def operation():
@@ -117,6 +130,14 @@ class DateRangeExportService:
             with self._uow_factory() as uow:
                 # One SELECT captures all matching rows and revisions before slow rendering.
                 models = tuple(document_model(draft) for draft in uow.drafts.list(start, end))
+            if self._templates is not None:
+                layouts = {
+                    model.template_id: self._templates.get(model.template_id).layout
+                    for model in models
+                }
+                models = tuple(
+                    replace(model, layout=layouts[model.template_id]) for model in models
+                )
             if not models:
                 raise ValidationError("date_range", "No saved drafts in this date range.")
             artifact = self._store.publish(self._renderer.render(models, dates), "zip")

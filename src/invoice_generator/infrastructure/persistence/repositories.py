@@ -20,8 +20,13 @@ from invoice_generator.domain.models import (
     LineTotals,
     Party,
     TaxMode,
+    ValidationError,
 )
-from invoice_generator.infrastructure.persistence.models import AuditRecord, DraftRecord
+from invoice_generator.infrastructure.persistence.models import (
+    AuditRecord,
+    DraftRecord,
+    IssuedRecord,
+)
 
 
 def encode(draft: DraftInvoice) -> str:
@@ -66,6 +71,7 @@ class SqlAlchemyDraftRepository:
             select(DraftRecord)
             .where(
                 DraftRecord.deleted.is_(False),
+                ~select(IssuedRecord.id).where(IssuedRecord.draft_id == DraftRecord.id).exists(),
                 DraftRecord.invoice_date >= start.isoformat(),
                 DraftRecord.invoice_date <= end.isoformat(),
             )
@@ -74,6 +80,7 @@ class SqlAlchemyDraftRepository:
         return tuple(decode(row.payload) for row in self._session.scalars(query))
 
     def save(self, draft: DraftInvoice, expected_revision: int) -> DraftInvoice:
+        self._check_editable(draft.id)
         saved = replace(draft, revision=expected_revision + 1)
         values = {
             "revision": saved.revision,
@@ -100,7 +107,17 @@ class SqlAlchemyDraftRepository:
                 raise ConflictError
         return saved
 
+    def _check_editable(self, draft_id):
+        if self._session.scalars(
+            select(IssuedRecord.id).where(IssuedRecord.draft_id == draft_id)
+        ).first():
+            raise ValidationError(
+                "invoice",
+                "Issued invoices cannot be edited or deleted. Use the cancellation workflow.",
+            )
+
     def delete(self, draft_id: str, expected_revision: int) -> None:
+        self._check_editable(draft_id)
         result = self._session.execute(
             update(DraftRecord)
             .where(

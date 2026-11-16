@@ -21,10 +21,20 @@ class DraftViewModel:
         words: IDraftPdfCommands | None = None,
         previews: IDraftPreviewQueries | None = None,
         range_exports: IDateRangeExportCommands | None = None,
+        *,
+        auth=None,
+        firm=None,
+        templates=None,
+        customers=None,
+        items=None,
+        backups=None,
+        issued=None,
     ):
         self.commands, self.queries = commands, queries
         self.pdfs, self.artifacts = pdfs, artifacts
         self.words, self.previews, self.range_exports = words, previews, range_exports
+        self.auth, self.firm_settings, self.templates = auth, firm, templates
+        self.customers, self.items, self.backups, self.issued = customers, items, backups, issued
         self.current: DraftDTO | None = None
 
     def save_request(self, data: DraftInput) -> SaveDraftRequest:

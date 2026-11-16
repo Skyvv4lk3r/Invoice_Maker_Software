@@ -78,6 +78,55 @@
               </widget>
             </item>
             <item>
+              <widget class="QPushButton" name="customersButton">
+                <property name="text">
+                  <string>Customers</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="catalogButton">
+                <property name="text">
+                  <string>Item catalogue</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="designerButton">
+                <property name="text">
+                  <string>Invoice designer</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="firmSettingsButton">
+                <property name="text">
+                  <string>Firm settings</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="backupButton">
+                <property name="text">
+                  <string>Backups</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="securityButton">
+                <property name="text">
+                  <string>Security / activity</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="lockButton">
+                <property name="text">
+                  <string>Lock workspace</string>
+                </property>
+              </widget>
+            </item>
+            <item>
               <spacer name="spacer52">
                 <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -164,7 +213,7 @@ stay on this computer.</string>
             <item>
               <widget class="QLabel" name="buildLabel">
                 <property name="text">
-                  <string>Draft workspace  ·  Documents are marked DRAFT until invoice issuance is available.</string>
+                  <string>Firm workspace · Finish firm setup to enable supported invoice issuance.</string>
                 </property>
               </widget>
             </item>
@@ -304,6 +353,9 @@ stay on this computer.</string>
                           </property>
                           <item>
                             <layout class="QHBoxLayout" name="dateFilters">
+                              <item>
+                                <widget class="QComboBox" name="recordType" />
+                              </item>
                               <item>
                                 <widget class="QWidget" name="searchField">
                                   <layout class="QVBoxLayout" name="searchLayout">
@@ -549,6 +601,13 @@ stay on this computer.</string>
                             </property>
                             <property name="maximumWidth">
                               <number>120</number>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QPushButton" name="issueButton">
+                            <property name="text">
+                              <string>Issue invoice</string>
                             </property>
                           </widget>
                         </item>
@@ -919,6 +978,13 @@ stay on this computer.</string>
                                               <string>Bill to · Customer</string>
                                             </property>
                                             <layout class="QVBoxLayout" name="customerLayout">
+                                              <item>
+                                                <widget class="QPushButton" name="pickCustomerButton">
+                                                  <property name="text">
+                                                    <string>Choose saved customer…</string>
+                                                  </property>
+                                                </widget>
+                                              </item>
                                               <property name="leftMargin">
                                                 <number>16</number>
                                               </property>
@@ -1460,6 +1526,13 @@ stay on this computer.</string>
                                     </item>
                                     <item>
                                       <layout class="QHBoxLayout" name="itemActions">
+                                        <item>
+                                          <widget class="QPushButton" name="pickItemButton">
+                                            <property name="text">
+                                              <string>Add from catalog…</string>
+                                            </property>
+                                          </widget>
+                                        </item>
                                         <item>
                                           <widget class="QPushButton" name="addItemButton">
                                             <property name="text">

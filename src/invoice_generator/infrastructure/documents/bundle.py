@@ -33,7 +33,8 @@ class DraftBundleRenderer:
         invoices = [
             [
                 "Status",
-                "Draft ID",
+                "Record ID",
+                "Invoice number",
                 "Revision",
                 "Date",
                 "Firm",
@@ -53,7 +54,8 @@ class DraftBundleRenderer:
         lines = [
             [
                 "Status",
-                "Draft ID",
+                "Record ID",
+                "Invoice number",
                 "Revision",
                 "Date",
                 "Line",
@@ -74,7 +76,9 @@ class DraftBundleRenderer:
         output = BytesIO()
         manifest = {
             "schema_version": 1,
-            "status": "DRAFT",
+            "status": "ISSUED_REGISTER"
+            if any(model.invoice_number for model in models)
+            else "DRAFT",
             "start": dates.start,
             "end": dates.end,
             "count": len(models),
@@ -85,8 +89,9 @@ class DraftBundleRenderer:
                 totals = model.totals
                 invoices.append(
                     [
-                        "DRAFT",
+                        model.status,
                         model.draft_id,
+                        model.invoice_number or "",
                         model.revision,
                         model.invoice_date,
                         *[
@@ -116,8 +121,9 @@ class DraftBundleRenderer:
                 for number, line in enumerate(model.lines, 1):
                     lines.append(
                         [
-                            "DRAFT",
+                            model.status,
                             model.draft_id,
+                            model.invoice_number or "",
                             model.revision,
                             model.invoice_date,
                             number,
@@ -140,7 +146,10 @@ class DraftBundleRenderer:
                             ],
                         ]
                     )
-                stem = f"{model.invoice_date}-{model.draft_id}-r{model.revision}"
+                stem = (
+                    f"{model.invoice_date}-{model.invoice_number or 'draft'}-"
+                    f"{model.draft_id}-r{model.revision}"
+                )
                 pdf_name, word_name = f"pdf/{stem}.pdf", f"word/{stem}.docx"
                 archive.writestr(pdf_name, self._pdf.render(model))
                 archive.writestr(word_name, self._word.render(model))
@@ -148,6 +157,8 @@ class DraftBundleRenderer:
                     {
                         "id": model.draft_id,
                         "revision": model.revision,
+                        "number": model.invoice_number,
+                        "status": model.status,
                         "pdf": pdf_name,
                         "word": word_name,
                     }
@@ -155,19 +166,18 @@ class DraftBundleRenderer:
             archive.writestr("invoices.csv", csv_bytes(invoices))
             archive.writestr("line-items.csv", csv_bytes(lines))
             archive.writestr("manifest.json", json.dumps(manifest, indent=2))
+            issued = any(model.invoice_number is not None for model in models)
+            description = (
+                "ISSUED INVOICE REGISTER — NOT A GST PORTAL IMPORT FILE\n"
+                "Cancelled invoices are included with status CANCELLED; exclude or reconcile them "
+                "appropriately when preparing returns. Word copies are editable references.\n"
+                if issued
+                else "DRAFT REVIEW PACKAGE — NOT A GST RETURN\nNo numbers allocated.\n"
+            )
             archive.writestr(
                 "README.txt",
-                (
-                    "DRAFT REVIEW PACKAGE — NOT A GST RETURN\n"
-                    "Contains all non-deleted saved drafts whose invoice dates are in the "
-                    "inclusive "
-                    f"range {dates.start} to {dates.end}. Unsaved edits are not included.\n"
-                    "PDFs, Word copies and CSV registers use the same captured draft revisions.\n"
-                    "All amounts are INR. GST rates and split are manually supplied draft inputs.\n"
-                    "No invoice numbers have been allocated. "
-                    "Verify and issue invoices before filing.\n"
-                    "Do not use this package as a completed GST filing or import format.\n"
-                    "Spreadsheet-sensitive text is prefixed with an apostrophe.\n"
-                ),
+                description + f"Inclusive invoice-date range: {dates.start} to {dates.end}.\n"
+                "Documents and registers use the same captured snapshots. All amounts are INR.\n"
+                "No filing or delivery is performed. Spreadsheet-sensitive text is escaped.\n",
             )
         return output.getvalue()

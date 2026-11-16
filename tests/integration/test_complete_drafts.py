@@ -74,7 +74,7 @@ def test_previous_payload_remains_readable(sample):
     [
         ({"firm_details": PartyDetails(gstin="invalid")}, "firm_details.gstin"),
         ({"due_date": "2026-03-31"}, "due_date"),
-        ({"template_id": "missing"}, "template_id"),
+        ({"template_id": "missing"}, "id"),
         ({"notes": "bad\x00text"}, "notes"),
     ],
 )

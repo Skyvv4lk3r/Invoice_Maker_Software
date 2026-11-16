@@ -46,7 +46,7 @@ def safe_result(operation):
         return Result(error=ApplicationError("VALIDATION", str(error), error.field))
     except ConflictError:
         return Result(
-            error=ApplicationError("CONFLICT", "This draft changed. Reload before saving.")
+            error=ApplicationError("CONFLICT", "This record changed. Reload before saving.")
         )
     except MissingError:
         return Result(error=ApplicationError("NOT_FOUND", "This draft is unavailable or deleted."))
@@ -179,7 +179,7 @@ def build_draft(data: DraftInput, draft_id: str, revision: int) -> DraftInvoice:
     if data.due_date and parse_date(data.due_date, "due_date") < invoice_date:
         raise ValidationError("due_date", "Due date cannot be before the invoice date.")
     if data.template_id not in ("modern", "classic"):
-        raise ValidationError("template_id", "Choose Modern or Classic.")
+        parse_id(data.template_id)
     return DraftInvoice(
         draft_id,
         revision,
@@ -203,8 +203,9 @@ def build_draft(data: DraftInput, draft_id: str, revision: int) -> DraftInvoice:
 class DraftService:
     """Implements the two narrow draft/query ports; does not know Qt or SQLAlchemy."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory):
+    def __init__(self, uow_factory: UnitOfWorkFactory, templates=None):
         self._uow_factory = uow_factory
+        self._templates = templates
 
     def calculate(self, data: DraftInput) -> Result[TotalsDTO]:
         return safe_result(lambda: to_totals(build_draft(data, str(uuid4()), 0).totals))
@@ -217,6 +218,8 @@ class DraftService:
                 raise ValidationError("revision", "New drafts must start at revision zero.")
             draft_id = parse_id(request.id) if request.id is not None else str(uuid4())
             draft = build_draft(request.data, draft_id, request.expected_revision)
+            if self._templates is not None:
+                self._templates.get(draft.template_id)
             with self._uow_factory() as uow:
                 saved = uow.drafts.save(draft, request.expected_revision)
                 uow.audit.append("draft.saved", saved.id, saved.revision)

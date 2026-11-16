@@ -1,27 +1,37 @@
-# Screens and invoice documents
+# Invoice layouts
 
-These are separate design surfaces:
+The application theme and invoice documents are separate. Qt QSS changes the
+application's screens; an InvoiceLayout changes the PDF and Word output.
 
-| Surface | Current implementation | Remaining work |
-| --- | --- | --- |
-| Desktop screens | Qt Designer form and a packaged QSS application theme | Accessibility and larger-data usability testing |
-| Draft PDF | ReportLab, A4, embedded bundled Latin fonts, repeated table headers | Indian-script fonts/shaping, logo and production sections |
-| Word draft | python-docx, A4, editable fields and repeated table header | Published docxtpl bundles and Microsoft Word layout QA |
-| Document styles | Modern/Classic palettes saved with each draft | User-designed, versioned and validated templates |
-| Preview | Actual PDF bytes shown through Qt PDF, without saving | Candidate-template publication previews |
-| Template catalogue | Not implemented | Versions, assets, branding snapshots, publication and retirement |
+In **Invoice designer**, start with Modern or Classic. Choose **Save as new** to
+create a named template. Built-ins are immutable. Further changes use **Save new
+version** with optimistic version checking. Firm settings select the default.
 
-The renderers receive a neutral `DraftPdfModel` shared by both document formats,
-with already calculated amounts. They do not perform financial formulas or change
-invoice facts. ReportLab text is escaped. PDF fonts are embedded from ReportLab's
-bundled Vera font files; this is not full Indian-script support.
+| Setting | Supported values |
+| --- | --- |
+| Logo | PNG/JPEG input, up to 2 MB and 4000×4000; re-encoded as PNG, at most 800×250 |
+| Colours | Six-digit accent and alternate-row tint |
+| Font | Sans serif, serif or monospace |
+| Body size / margin | 8–12 pt setting, 10–25 mm margins |
+| Header | Left, centre or right alignment |
+| Parties | Side by side or stacked |
+| Rows | 4–12 spacing setting |
+| Columns | Reorder item, quantity/unit, price, GST rate, taxable amount, line total |
+| Sections | Reorder parties, details, items, totals, notes and terms; totals follow items |
+| Optional display | Notes, payment terms, signature area and footer message |
 
-Modern and Classic are built-in colour variants of the same draft layout. They do
-not represent the versioned template catalogue in the target UML. Future issued
-documents must freeze template, branding and renderer versions so later changes do
-not silently alter historical documents.
+Required facts cannot be removed. Issued documents always include the signatory
+area. The preview renders a real PDF from the current invoice or fictional sample
+data. Layout JSON import/export makes designs reusable. It is a declarative file
+format, not executable code; arbitrary Word/PDF template import and a free-form
+page canvas are not implemented.
 
-PDF and Word match invoice facts; their pagination need not match. Word copies are
-editable, and later manual edits do not change the database. A fictional sample was
-rendered through LibreOffice for visual review; exact Microsoft Word pagination
-still needs validation. Both formats retain explicit DRAFT labels.
+Issued invoices capture the full layout/logo; later template updates do not alter
+stored facts. Drafts use the newest version. PDF and Word use the same financial
+facts, but pagination differs. Font support is currently Latin text; Indian scripts
+need appropriate fonts and shaping. Exact Microsoft Word rendering has not been
+validated; a sample was rendered and checked using LibreOffice.
+
+PDF sans uses bundled embedded Vera fonts; serif/mono use standard PDF fonts.
+Renderer code and font binaries are not archived per invoice. Preserve original
+PDF exports when byte-identical historical documents are required.

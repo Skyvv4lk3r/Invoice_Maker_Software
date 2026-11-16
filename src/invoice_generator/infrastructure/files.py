@@ -20,7 +20,7 @@ class LocalArtifactStore:
         if extension not in ("pdf", "docx", "zip"):
             raise ValueError("Unsupported export format.")
         artifact_id = str(uuid4())
-        path = self._directory / f"draft-{artifact_id}.{extension}"
+        path = self._directory / f"invoice-{artifact_id}.{extension}"
         temporary = path.with_suffix(".tmp")
         try:
             with temporary.open("xb") as file:
@@ -34,7 +34,8 @@ class LocalArtifactStore:
 
     def reveal(self, artifact_id: str) -> None:
         paths = [
-            self._directory / f"draft-{UUID(artifact_id)}.{extension}"
+            self._directory / f"{prefix}-{UUID(artifact_id)}.{extension}"
+            for prefix in ("invoice", "draft")
             for extension in ("pdf", "docx", "zip")
         ]
         path = next((candidate for candidate in paths if candidate.is_file()), None)

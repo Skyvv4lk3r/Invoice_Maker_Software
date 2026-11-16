@@ -1,40 +1,39 @@
-# Validation performed on 14 November 2026
+# Validation for version 0.3
 
-The expanded draft workspace was checked locally on Linux with Python 3.12.14.
-These results describe a draft application, not a production accounting release.
+Local validation: **68 backend/domain/architecture tests and 9 GUI tests passed**;
+lint, formatting and all five dependency contracts passed. Checks ran with Python
+3.12, Linux and Qt's offscreen platform. The repository's
+GitHub workflow separately covers Windows/Linux Python 3.12/3.13 and Windows Qt.
 
-| Check | Observed result |
-| --- | --- |
-| Domain, integration and architecture tests | 39 passed |
-| Qt desktop workflow tests | 5 passed using Qt's offscreen platform |
-| Import-linter contracts | 5 kept, 0 broken |
-| Ruff lint and formatting | Passed |
-| Python wheel/source distribution | Built successfully using isolated build dependencies |
-| Desktop visual review | List, editor, collapsible details, persistent total and actual PDF preview reviewed |
-| Draft PDF visual review | A4, embedded Latin fonts, parties, item amounts, tax summary and DRAFT labels reviewed |
-| Word visual review | Fictional sample rendered through LibreOffice and inspected; no clipped tables or text |
-| Multipage PDF case | 80 items including XML-sensitive text exported successfully |
-| Backward compatibility | Payloads without the new fields decode without data replacement |
-| Git whitespace check | Passed |
+The regression suite covers existing calculations, draft CRUD, revisions, exports,
+legacy draft decoding and dependency boundaries, plus:
 
-New tests exercise extended-field persistence, per-line totals, malformed fields,
-old JSON payloads, PDF preview without saving, Word content/revision conflicts,
-inclusive package boundaries, deleted-row exclusion, CSV formula escaping,
-consistent Word/register totals and revision manifests. Desktop tests cover
-automatic totals, PDF preview, Word export, search, save/cancel/discard navigation,
-stale-total removal and date-range export unaffected by search text.
+- anonymous capability rejection, single-owner setup, Argon2 hashes, persisted throttling;
+- password/recovery rotation, cross-session invalidation and idle expiration;
+- catalogue revisions/deletion and template versions, malformed import fields and logos;
+- issuance applicability, required data/tax checks, April financial-year reset;
+- immutable issued drafts, concurrent unique numbers and idempotent issue retries;
+- stale-revision rollback, frozen layouts, cancellation registers, render failure/retry;
+- encrypted backup roundtrip, wrong passwords, tampering and active-data preservation;
+- GUI setup/login, automatic firm defaults, unsaved edits through lock/unlock,
+  template saving and actual PDF preview.
 
-The earlier 8 November starter passed its five GitHub Actions jobs. The new branch's
-Windows/Linux and Python 3.12/3.13 results are reported by its own Actions run; local
-Linux checks do not substitute for those results.
+Run `python scripts/check.py` and `QT_QPA_PLATFORM=offscreen pytest tests/gui`.
+Run `python -m build` for the wheel. The Windows CI job builds a PyInstaller portable
+folder and smoke-tests the packaged sign-in screen before uploading an artifact.
 
-Not validated as production features: GST classification, registered GSTIN status,
-GSTIN checksum, issued numbering, financial-year counter reset, immutable issued
-invoices, special GST treatments, reusable master profiles, GST return submission,
-XLSX exports, published template versions, full Indian-script rendering, encrypted
-recovery and Windows installer behavior. Word was inspected through LibreOffice;
-Microsoft Word pagination still needs review. ZIP generation currently runs in
-memory and has not been benchmarked for large accounting datasets.
+Visual review used fictional data. Owner setup, sales workspace, firm settings,
+layout designer, issued preview, PDF output and LibreOffice-rendered Word output
+were inspected. Screenshots are in `docs/screenshots`. Exact Microsoft Word
+pagination, a signed Windows installer, assistive-technology support and heavy-data
+performance still need validation.
 
-Dependencies are bounded compatibility ranges, not a full release lock. A tested
-Windows dependency lock and installer remain necessary before distribution.
+## Scope references
+
+- [CBIC CGST Rule 46](https://taxinformation.cbic.gov.in/content-page/explore-rules/1000136/1000001)
+- [GSTN e-invoice overview](https://tutorial.gst.gov.in/downloads/news/e_invoice_overview.pdf)
+- [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+
+These informed the supported workflow and security controls. Passing tests does not
+certify tax applicability or legal compliance. The firm/accountant must validate
+its own treatment and document requirements before using final issuance.

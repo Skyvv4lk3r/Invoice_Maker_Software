@@ -1,89 +1,117 @@
-# Architecture
+# Architecture as implemented in version 0.3
 
-The application is one desktop process with independently testable Python packages.
-The frontend is not permitted to import business objects, repositories or document
-libraries. It passes immutable request DTOs to small application Protocols.
+One local desktop process has independently testable frontend and backend packages.
+Presentation imports only public application contracts, its own modules, Qt and the
+standard library. It never imports database, tax, cryptography or rendering libraries.
+The application core is usable without Qt. Five import-linter contracts enforce this.
 
-| Package | Owns | Depends on |
-| --- | --- | --- |
-| `presentation` | Views, form values, display formatting, Qt worker adapter | `application.contracts`, Qt, standard library |
-| `application.contracts` | Requests, results, error values, public interfaces | Standard library |
-| `application.handlers` | Validation orchestration, transactions, document mapping | Contracts, ports, domain |
-| `application.ports` | Persistence, render and artifact capabilities | Contracts and domain values |
-| `domain` | Decimal calculations, Indian words, fiscal-year keys | Standard library |
-| `infrastructure` | SQLAlchemy repositories, Alembic, PDF/Word/ZIP renderers, files | Domain, application ports/contracts, libraries |
-| `bootstrap` | Object construction and dependency injection | Concrete implementations |
+```mermaid
+flowchart TD
+    UI[Qt screens] --> API[Application contracts]
+    BOOT[Bootstrap] --> UI
+    BOOT --> AUTH[Authentication and capability guards]
+    AUTH --> USE[Application use cases]
+    USE --> DOMAIN[Domain rules]
+    USE --> PORTS[Outbound protocols]
+    DB[SQLite adapters] -. implements .-> PORTS
+    DOC[Document and asset adapters] -. implements .-> PORTS
+    SEC[Hashing and backup adapters] -. implements .-> PORTS
+```
 
-## Current request path
+Arrows show dependencies or wiring, not all runtime calls. Bootstrap injects
+separate capabilities, rather than providing a global manager or service locator.
 
-The view captures form values into a DTO. `QtTaskBridge` schedules a callable on a
-worker. The injected use case validates/calculates and uses its persistence ports.
-A queued Qt signal delivers a plain result back to the GUI thread. The form is
-disabled during explicit operations, so a user cannot edit the submitted form while a save
-is pending. Debounced calculation runs without disabling input; generation tokens discard
-stale results. Every edit immediately clears old totals and the previous PDF preview. No worker receives a QWidget or database session from the screen.
-
-Saving begins a unit-of-work scope. Repository writes use a revision predicate;
-stale writes return CONFLICT. Saving and appending an audit event commit together.
-Failure or abandonment rolls back. A new Session is created for each scope.
-Deletion is a tombstone; original draft rows and audit events remain stored.
-
-Draft export captures one immutable revision, closes its database scope, maps the
-values to a neutral document model, and invokes the PDF or Word renderer. Rendering does not calculate
-tax or mutate an invoice. A unique temporary file is flushed then atomically
-renamed. Export failures do not undo or duplicate a saved draft. Draft exports are
-temporary review artifacts; this initial implementation has no issued-artifact
-registry or retry queue.
-
-## SOLID in the implementation
-
-| Principle | Concrete decision |
+| Responsibility | Implementation |
 | --- | --- |
-| Single responsibility | Calculations, use cases, repositories, renderers and views are separate. |
-| Open/closed | Replace an adapter through constructor injection; bootstrap selects implementations. |
-| Liskov substitution | Adapter contract tests must preserve amounts, transaction outcomes and declared errors. |
-| Interface segregation | Separate commands, queries, draft exports, preview, range exports, file actions and persistence. |
-| Dependency inversion | Handlers depend on Protocols; adapters depend on application-owned contracts. |
+| Screen and worker state | Qt widgets, frozen requests and queued results; no widget access from workers |
+| Business calculations | Decimal/string inputs, integer paise, domain validation |
+| Access control | Owner identity, ephemeral session, persisted epoch/throttle, capability decorators |
+| Data transactions | Fresh SQLAlchemy session per operation; optimistic draft/catalog revisions |
+| Document preparation | Neutral immutable model with stored amounts; renderers do not calculate tax |
+| Template settings | Immutable versions with normalized PNG bytes; no scripts or arbitrary HTML |
+| Final issuance | SQLite write transaction, fiscal counter, snapshot, audit, pending render record |
+| Backup | SQLite consistent backup, authenticated encrypted archive, verified staged restore |
 
-The configured import-linter checks catch forbidden imports. Backend tests run in
-CI without the desktop extra; a subprocess test also verifies that executing the
-backend does not import Qt. Dataclass freezing and typed DTOs keep the boundary
-explicit, but Python annotations do not validate every untrusted runtime value.
-The current backend is an internal API, not an exposed HTTP endpoint.
+## Authentication boundary
 
-## Planned target architecture
+Every data/document/catalog/backup capability constructed by bootstrap is guarded
+by AuthenticationService. Hiding screens is not the access-control mechanism.
+An owner is created once. Password and recovery code are Argon2id hashes. Each
+session records the current credential epoch and an activity deadline. Credential
+rotation increments the persisted epoch so other running sessions become invalid.
+Five failed attempts cause a persisted five-minute lockout. Sign-in is process-local;
+there are no reusable access tokens stored on disk.
 
-The full UML design includes issuance snapshots, versioned template bundles,
-branding snapshots, immutable render bindings, idempotent jobs and complete backups.
-They are not implemented by this starter. In particular:
+This is application access control, not a hostile-filesystem security boundary.
+The owner of the OS account can inspect the unencrypted database. The Python
+backend is an internal interface, not an exposed web API. Future HTTP exposure
+requires additional input validation, transport/session security and deployment work.
 
-- `IDraftPdfCommands` is a milestone-specific interface, not an implementation of
-  the target issued-document job interface.
-- The current schema only stores draft and audit rows. Number sequences, issued
-  snapshots, template versions, persisted export manifests and payments require later migrations.
-  Current draft ZIP manifests live inside the exported package; they are not a durable job registry.
-- Financial-year derivation is implemented as a pure helper. Counter allocation
-  and reset are still future transactional behaviour, not a scheduled clock reset.
-- SQLite is local to one workstation. Sharing a live database via a network/cloud
-  folder is not a planned multi-user architecture.
-- An HTTP adapter can be added later without placing web framework imports in domain.
+## Draft and issuance lifecycle
 
-These differences keep the first deliverable executable without claiming that
-every box in the target UML has already been built.
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Draft: Edit with expected revision
+    Draft --> Deleted: Soft delete
+    Draft --> Issued: Validate and allocate number
+    Issued --> Cancelled: Record reason
+    Issued --> Issued: Preview or export
+    Cancelled --> Cancelled: Export marked copy
+```
 
-## Expanded draft documents and storage
+Draft save and audit commit together. Issued drafts cannot be edited or deleted.
+Issuance validates an ordinary domestic taxable supply and the firm's explicit
+applicability setting. Under `BEGIN IMMEDIATE`, it rechecks the expected draft and
+firm revisions, allocates the next integer for the invoice date's April–March
+financial year, captures the document facts and layout, appends audit history and
+creates a PENDING render record in one transaction. A unique constraint covers
+financial year plus number. Draft ID and request ID also have uniqueness constraints.
+Retrying the same issue request returns the same invoice. Cancellation retains the
+number; a later invoice cannot reuse it. Changing the workspace GSTIN after issuance
+is rejected. Additional firm registrations need separate workspaces.
 
-Additional party/item fields live in the existing JSON payload. The decoder supplies
-old-record defaults for every new field; no schema rewrite is needed for this change.
-If a future change adds tables or columns, it must still use Alembic.
+Rendering happens after commit. Failure leaves the number and snapshot intact;
+export can be retried from the stored document. Successful PDF export marks its
+render record READY, guarded against a concurrent cancellation. There is no
+background job runner or automatic retry scheduler yet. Old exported copies can
+still exist after cancellation; the application cannot revoke shared files.
 
-PDF and Word receive the same immutable model and stored monetary totals. The ZIP
-use case reads all non-deleted draft rows in a single SELECT, captures their revisions,
-closes the transaction, then renders copies and registers from that snapshot. It
-publishes a complete ZIP atomically; no partial package appears at the final path.
-Current exports are generated in memory and intended for modest single-workstation
-data volumes. Streaming, cancellation/progress and durable jobs remain future work.
+## Templates and output
 
-Preview takes unsaved values through the same validation/calculation/model pipeline
-and returns PDF bytes without creating a database record or export file. Qt displays
-those bytes with Qt PDF. It does not import ReportLab or the Word adapter.
+Drafts select the latest saved version of their template. Issuance captures the
+full layout and normalized logo, firm/customer information and calculated amounts.
+Later template/catalog/profile changes do not alter those captured facts.
+Renderer code/fonts are not version-pinned per invoice; upgrades may change
+pagination when regenerating a document. Keep original exported PDFs for exact
+historical bytes. Completed export files are included in backups.
+
+PDF and Word share the document model and ordered layout settings; their pagination
+may differ. ZIP exports read the records in one database query and render the same
+captured snapshots into documents, CSV registers and a manifest. Publication uses
+unique temporary files and atomic replacement. Exports are memory-bound; streaming
+and progress/cancellation are later work.
+
+## SOLID decisions
+
+| Principle | Concrete boundary |
+| --- | --- |
+| Single responsibility | Identity, firm profile, catalogue, issuance, backup and rendering use cases are separate |
+| Open/closed | Inject another renderer/storage adapter through the existing capability |
+| Liskov substitution | Adapter tests check result, money, transaction and failure semantics |
+| Interface segregation | Separate authentication, template, firm, catalogue, issue, preview and file-action Protocols |
+| Dependency inversion | Application-owned contracts/ports are implemented by infrastructure; only bootstrap chooses concrete adapters |
+
+## Storage and migration
+
+`0001` stores drafts/audit; `0002_workspace` adds identity, firm/catalogue records and
+template versions; `0003_issuance` adds counters, snapshots and render status.
+Existing draft JSON remains readable using backward-compatible defaults. No
+migration replaces a user's database. New identity/issued tables explicitly reject
+destructive downgrades. Backup restore only accepts this schema version, verifies
+hashes and SQLite integrity, and stages a new directory. Live database sharing over
+network/cloud folders is unsupported.
+
+The original 41-page UML includes broader abstractions such as published template
+bundles, persistent export jobs, payment ledgers, credit/debit notes and purchase
+capture. Those remain targets; this document describes the working implementation.

@@ -23,14 +23,44 @@ from invoice_generator.application.contracts.interfaces import (
     IInvoiceDraftCommands,
     IInvoiceQueries,
 )
+from invoice_generator.application.contracts.issuance import IInvoiceIssuance
+from invoice_generator.application.contracts.workspace import (
+    IAuthentication,
+    IBackupCommands,
+    ICustomerCatalog,
+    IFirmSettings,
+    IItemCatalog,
+    ITemplateCatalog,
+    OwnerSetup,
+)
+from invoice_generator.application.handlers.authentication import AuthenticationService
+from invoice_generator.application.handlers.backups import BackupService
 from invoice_generator.application.handlers.documents import DateRangeExportService, DraftPdfService
 from invoice_generator.application.handlers.drafts import DraftService
+from invoice_generator.application.handlers.issuance import IssuanceService
+from invoice_generator.application.handlers.secured import AuthorizedCapability
+from invoice_generator.application.handlers.workspace import (
+    CustomerService,
+    FirmService,
+    ItemService,
+    TemplateService,
+)
+from invoice_generator.infrastructure.backups import EncryptedBackupStore
 from invoice_generator.infrastructure.documents.bundle import DraftBundleRenderer
 from invoice_generator.infrastructure.documents.pdf import ReportLabDraftRenderer
 from invoice_generator.infrastructure.documents.word import WordDraftRenderer
 from invoice_generator.infrastructure.files import LocalArtifactStore
+from invoice_generator.infrastructure.images import LogoNormalizer
 from invoice_generator.infrastructure.persistence.database import create_database
+from invoice_generator.infrastructure.persistence.issuance import IssuedStore
 from invoice_generator.infrastructure.persistence.repositories import SqlAlchemyDraftUnitOfWork
+from invoice_generator.infrastructure.persistence.workspace import (
+    CatalogStore,
+    FirmStore,
+    IdentityStore,
+    TemplateStore,
+)
+from invoice_generator.infrastructure.security import ArgonPasswordHasher
 
 
 @dataclass
@@ -44,6 +74,13 @@ class Backend:
     words: IDraftPdfCommands
     previews: IDraftPreviewQueries
     range_exports: IDateRangeExportCommands
+    auth: IAuthentication
+    firm: IFirmSettings
+    templates: ITemplateCatalog
+    customers: ICustomerCatalog
+    items: IItemCatalog
+    backups: IBackupCommands
+    issued: IInvoiceIssuance
 
     def close(self):
         self._engine.dispose()
@@ -56,14 +93,51 @@ def build_backend(directory: Path) -> Backend:
     def uow_factory():
         return SqlAlchemyDraftUnitOfWork(engine)
 
-    drafts = DraftService(uow_factory)
+    authentication = AuthenticationService(IdentityStore(engine), ArgonPasswordHasher())
+    templates, firms = TemplateStore(engine), FirmStore(engine)
+    drafts = DraftService(uow_factory, templates)
     store = LocalArtifactStore(directory / "exports")
     pdf, word = ReportLabDraftRenderer(), WordDraftRenderer()
-    documents = DraftPdfService(uow_factory, pdf, store)
-    words = DraftPdfService(uow_factory, word, store, "docx")
-    bundles = DateRangeExportService(uow_factory, DraftBundleRenderer(pdf, word), store)
+    documents = DraftPdfService(uow_factory, pdf, store, templates=templates)
+    words = DraftPdfService(uow_factory, word, store, "docx", templates)
+    bundles = DraftBundleRenderer(pdf, word)
+    ranges = DateRangeExportService(uow_factory, bundles, store, templates)
+    issuance = IssuanceService(
+        uow_factory, IssuedStore(engine), firms, templates, pdf, word, bundles, store
+    )
+
+    def secure(service, *methods):
+        return AuthorizedCapability(service, authentication, methods)
+
     return Backend(
-        drafts, drafts, documents, documents, directory, engine, words, documents, bundles
+        commands=secure(drafts, "save", "delete"),
+        queries=secure(drafts, "get", "list", "calculate"),
+        pdfs=secure(documents, "export"),
+        artifacts=secure(documents, "reveal"),
+        directory=directory,
+        _engine=engine,
+        words=secure(words, "export"),
+        previews=secure(documents, "preview"),
+        range_exports=secure(ranges, "export_range"),
+        auth=authentication,
+        firm=secure(FirmService(firms, templates), "get", "save", "audit"),
+        templates=secure(
+            TemplateService(templates, LogoNormalizer(), pdf),
+            "list",
+            "save",
+            "normalize_logo",
+            "import_layout",
+            "export_layout",
+            "preview",
+        ),
+        customers=secure(
+            CustomerService(CatalogStore(engine, "customer")), "list", "save", "delete"
+        ),
+        items=secure(ItemService(CatalogStore(engine, "item")), "list", "save", "delete"),
+        backups=secure(BackupService(EncryptedBackupStore(directory)), "create", "restore_copy"),
+        issued=secure(
+            issuance, "issue", "list", "get", "export", "cancel", "export_range", "preview"
+        ),
     )
 
 
@@ -86,6 +160,15 @@ def main(argv=None) -> int:
     backend = build_backend(directory)
     try:
         if args.demo:
+            import secrets
+
+            state = backend.auth.state().value
+            if state.configured:
+                print(
+                    "Demo requires a new empty data directory; existing workspaces require sign-in."
+                )
+                return 1
+            backend.auth.setup(OwnerSetup("Demo Firm", "demo-owner", secrets.token_urlsafe(24)))
             saved = backend.commands.save(
                 SaveDraftRequest(
                     DraftInput(
@@ -112,11 +195,25 @@ def main(argv=None) -> int:
         from PySide6.QtCore import QTimer
         from PySide6.QtWidgets import QApplication
 
+        from invoice_generator.presentation.qt.authentication import AuthenticationDialog
         from invoice_generator.presentation.qt.main_window import MainWindow
         from invoice_generator.presentation.view_model import DraftViewModel
 
         app = QApplication.instance() or QApplication([])
         app.setApplicationName("Invoice Generator")
+        while True:
+            login = AuthenticationDialog(backend.auth, allow_workspace=True)
+            if args.smoke:
+                QTimer.singleShot(250, login.reject)
+            outcome = login.exec()
+            if login.workspace_path:
+                replacement = build_backend(Path(login.workspace_path))
+                backend.close()
+                backend = replacement
+                continue
+            if outcome != login.DialogCode.Accepted:
+                return 0
+            break
         window = MainWindow(
             DraftViewModel(
                 backend.commands,
@@ -126,6 +223,13 @@ def main(argv=None) -> int:
                 backend.words,
                 backend.previews,
                 backend.range_exports,
+                auth=backend.auth,
+                firm=backend.firm,
+                templates=backend.templates,
+                customers=backend.customers,
+                items=backend.items,
+                backups=backend.backups,
+                issued=backend.issued,
             )
         )
         window.show()

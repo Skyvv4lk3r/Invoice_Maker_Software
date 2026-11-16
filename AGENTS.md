@@ -18,10 +18,13 @@ number and financial-year reset requirements when implementing issuance.
 
 ## Current milestone
 
-Draft operations, PDF/Word export, PDF preview and date-range draft packages exist. Do not introduce a button
-that implies legal issuance until the issuance transaction, required fields,
-financial-year uniqueness and tested GST treatment policy are implemented together.
-Never remove draft watermarks to simulate a finished invoice feature.
+Version 0.3 includes owner authentication, firm/catalogue settings, versioned layouts,
+PDF/Word and range exports, restricted domestic taxable issuance with atomic FY
+counters, immutable snapshots, cancellation and encrypted backups. Preserve the
+explicit applicability gate and blocked unsupported tax cases. Do not widen issuance
+scope without validation, document fields and transaction/lifecycle tests together.
+Do not remove draft watermarks to simulate final issuance. Authentication is local
+application access control; never claim the live database is encrypted.
 
 ## Changes and validation
 
